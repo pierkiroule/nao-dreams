@@ -1,26 +1,5 @@
 import { DREAM_CONFIG } from "../config/dream";
-
-const labels = {
-  ocean: "un océan immobile",
-  forest: "une forêt renversée",
-  desert: "un désert de lumière",
-  mountain: "une montagne endormie",
-
-  whale: "une baleine",
-  fox: "un renard",
-  owl: "une chouette",
-  butterfly: "un papillon",
-
-  key: "une clé",
-  feather: "une plume",
-  lantern: "une lanterne",
-  mirror: "un miroir",
-
-  mist: "dans la brume",
-  moonlight: "sous un clair de lune",
-  "warm-rain": "sous une pluie chaude",
-  silence: "dans un silence profond",
-};
+import { findGraphNode, findSensation } from "../data/resources";
 
 function wait(duration) {
   return new Promise((resolve) => {
@@ -31,14 +10,16 @@ function wait(duration) {
 export async function generateDreamBubble(selections) {
   await wait(DREAM_CONFIG.localGenerationDelay);
 
-  const landscape = labels[selections.landscape] ?? "un paysage inconnu";
-  const presence = labels[selections.presence] ?? "une présence";
-  const object = labels[selections.object] ?? "un objet oublié";
-  const atmosphere = labels[selections.atmosphere] ?? "dans la nuit";
+  const selected = Object.fromEntries((selections.path ?? []).map((entry) => [entry.level, entry.id]));
+  const landscape = findGraphNode(selected.landscape)?.label ?? "un paysage inconnu";
+  const presence = findGraphNode(selected.presence)?.label ?? "une présence";
+  const object = findGraphNode(selected.object)?.label ?? "un objet oublié";
+  const atmosphere = (selections.path ?? []).filter((entry) => entry.level === "atmosphere").map((entry) => findGraphNode(entry.id)?.label).filter(Boolean).join(", ") || "dans la nuit";
+  const sensation = findSensation(selections.sensation)?.label ?? "Mystère";
 
   return [
-    `${atmosphere}, ${presence} naviguait au-dessus de ${landscape}.`,
+    `Dans ${atmosphere}, ${presence} naviguait au-dessus de ${landscape}.`,
     `Elle transportait ${object}, sans savoir qui l'avait déposé là.`,
-    "À l'horizon, une île apparaissait chaque fois qu'un rêveur fermait les yeux.",
+    `À l'horizon, une île apparaissait avec une sensation de ${sensation.toLowerCase()}.`,
   ].join(" ");
 }

@@ -2249,3 +2249,25 @@ button:focus-visible,
     transition: none;
   }
 }
+
+/* Constellation navigation: one living graph at a time. */
+.dream-constellation { max-width: 720px; margin: 0 auto; text-align: center; }
+.dream-constellation-header { min-height: 122px; }
+.dream-constellation-path, .dream-constellation-hint { color: var(--color-text-muted, #6f7286); font-size: .9rem; }
+.dream-constellation-back { border: 0; background: transparent; color: inherit; text-decoration: underline; cursor: pointer; }
+.dream-constellation-graph { position: relative; min-height: 390px; margin: 10px 0 18px; transition: opacity 180ms ease, transform 180ms ease; }
+.dream-constellation-graph.is-transitioning { opacity: 0; transform: scale(.96); }
+.dream-constellation-links { position: absolute; inset: 8% 10%; width: 80%; height: 78%; overflow: visible; }
+.dream-constellation-links path { fill: none; stroke: currentColor; stroke-opacity: .25; stroke-width: .7; }
+.dream-constellation-bubble { position: absolute; width: 112px; height: 112px; border: 1px solid rgba(255,255,255,.52); border-radius: 50%; background: rgba(255,255,255,.16); box-shadow: 0 12px 32px rgba(30, 34, 78, .18), inset 0 0 22px rgba(255,255,255,.28); color: inherit; font-size: 3rem; cursor: pointer; transition: transform 180ms ease, box-shadow 180ms ease; }
+.dream-constellation-bubble:hover, .dream-constellation-bubble:focus-visible, .dream-constellation-bubble.is-selected { transform: scale(1.09); box-shadow: 0 0 0 4px rgba(255,255,255,.35), 0 15px 38px rgba(30,34,78,.25); outline: none; }
+.dream-constellation-bubble.bubble-1 { left: 8%; top: 54%; }
+.dream-constellation-bubble.bubble-2 { left: calc(50% - 56px); top: 8%; }
+.dream-constellation-bubble.bubble-3 { right: 8%; top: 54%; }
+.dream-final-symbols { display: flex; justify-content: center; gap: 26px; margin: 24px 0; }
+.dream-final-symbol { display: grid; width: 88px; height: 88px; place-items: center; border-radius: 50%; background: rgba(255,255,255,.2); font-size: 2.7rem; }
+.dream-sensation-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 30px auto; }
+.dream-sensation-tag, .dream-constellation-continue { border: 1px solid currentColor; border-radius: 999px; background: rgba(255,255,255,.17); color: inherit; padding: 12px 18px; cursor: pointer; }
+.dream-sensation-tag.is-selected, .dream-constellation-continue:not(:disabled) { background: rgba(255,255,255,.42); }
+.dream-constellation-continue:disabled { cursor: not-allowed; opacity: .45; }
+@media (max-width: 480px) { .dream-constellation-bubble { width: 88px; height: 88px; font-size: 2.35rem; } .dream-constellation-bubble.bubble-2 { left: calc(50% - 44px); } }

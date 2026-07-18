@@ -1,10 +1,13 @@
 export const DREAM_CONFIG = {
-  selectionCategories: [
+  selectionPathLevels: [
+    "theme",
     "landscape",
     "presence",
     "object",
     "atmosphere",
+    "sensation",
   ],
+  finalSymbolCount: 3,
 
   crossingDuration: 3200,
   crossingMessageDuration: 900,
