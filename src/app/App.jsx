@@ -9,8 +9,10 @@ import DreamDepth from "../pages/DreamDepth";
 import Pass from "../pages/Pass";
 import Confirmation from "../pages/Confirmation";
 import Ocean from "../pages/Ocean";
+import Account from "../pages/Account";
 import { generateDreamBubble } from "../services/dreamService";
 import { syncJourney } from "../services/syncService";
+import { createProfile } from "../services/profileService";
 import {
   clearAppState,
   loadAppState,
@@ -31,6 +33,7 @@ const PAGE_COMPONENTS = {
   [STEPS.PASS]: Pass,
   [STEPS.CONFIRMATION]: Confirmation,
   [STEPS.OCEAN]: Ocean,
+  [STEPS.ACCOUNT]: Account,
 };
 
 export default function App() {
@@ -52,6 +55,19 @@ export default function App() {
 
   const actions = useMemo(
     () => ({
+      async createProfile(pseudonym) {
+        const profile = await createProfile(pseudonym);
+        dispatch({ type: EVENTS.CREATE_PROFILE, payload: { profile } });
+      },
+
+      openAccount() {
+        dispatch({ type: EVENTS.OPEN_ACCOUNT });
+      },
+
+      closeAccount() {
+        dispatch({ type: EVENTS.CLOSE_ACCOUNT });
+      },
+
       scan() {
         dispatch({
           type: EVENTS.SCAN,
@@ -114,6 +130,7 @@ export default function App() {
       <CurrentPage
         state={state}
         journey={state.journey}
+        profile={state.profile}
         actions={actions}
       />
     </Layout>

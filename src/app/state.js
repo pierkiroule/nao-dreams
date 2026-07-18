@@ -11,6 +11,7 @@ export const STEPS = {
   PASS: "pass",
   CONFIRMATION: "confirmation",
   OCEAN: "ocean",
+  ACCOUNT: "account",
 };
 
 export const EVENTS = {
@@ -23,6 +24,9 @@ export const EVENTS = {
   CONFIRM_PASS: "confirm_pass",
   OPEN_OCEAN: "open_ocean",
   RESTART: "restart",
+  CREATE_PROFILE: "create_profile",
+  OPEN_ACCOUNT: "open_account",
+  CLOSE_ACCOUNT: "close_account",
 };
 
 export const initialJourney = {
@@ -39,5 +43,6 @@ export const initialJourney = {
 
 export const initialAppState = {
   step: STEPS.HOME,
+  profile: null,
   journey: initialJourney,
 };

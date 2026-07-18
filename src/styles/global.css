@@ -2398,3 +2398,111 @@ button:focus-visible,
     transition: none;
   }
 }
+
+.profile-form,
+.welcome-profile,
+.account-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-medium);
+  background: var(--glass);
+  box-shadow: var(--shadow);
+}
+
+.profile-form {
+  display: grid;
+  gap: 12px;
+  padding: 22px;
+}
+
+.profile-form label {
+  color: var(--moon);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.3rem;
+}
+
+.profile-form input {
+  width: 100%;
+  border: 1px solid var(--border-active);
+  border-radius: 12px;
+  padding: 13px 14px;
+  color: var(--moon);
+  background: rgba(3, 5, 18, 0.45);
+  outline: none;
+}
+
+.profile-form input:focus {
+  border-color: var(--blue-300);
+  box-shadow: 0 0 0 3px rgba(138, 165, 255, 0.16);
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--blue-300);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.form-error {
+  margin: 0;
+  color: #ffb8c4;
+  font-size: 0.9rem;
+}
+
+.welcome-profile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+}
+
+.welcome-profile p {
+  margin: 0;
+}
+
+.welcome-profile button {
+  border: 0;
+  padding: 4px;
+  color: var(--blue-300);
+  background: transparent;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.account-page {
+  align-items: stretch;
+}
+
+.account-card {
+  padding: 8px 20px;
+}
+
+.account-details {
+  margin: 0;
+}
+
+.account-details > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 17px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.account-details > div:last-child {
+  border-bottom: 0;
+}
+
+.account-details dt {
+  color: var(--muted);
+}
+
+.account-details dd {
+  margin: 0;
+  color: var(--moon);
+  font-weight: 600;
+  text-align: right;
+}

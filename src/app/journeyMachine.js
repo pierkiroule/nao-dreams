@@ -12,8 +12,27 @@ import {
 
 export function journeyReducer(state, action) {
   switch (action.type) {
+    case EVENTS.CREATE_PROFILE:
+      return {
+        ...state,
+        profile: action.payload.profile,
+      };
+
+    case EVENTS.OPEN_ACCOUNT:
+      return {
+        ...state,
+        step: STEPS.ACCOUNT,
+      };
+
+    case EVENTS.CLOSE_ACCOUNT:
+      return {
+        ...state,
+        step: STEPS.HOME,
+      };
+
     case EVENTS.SCAN:
       return {
+        ...state,
         step: STEPS.RECEIVE,
         journey: createJourney({
           naoId: action.payload?.naoId,
@@ -33,6 +52,7 @@ export function journeyReducer(state, action) {
 
     case EVENTS.START_CROSSING:
       return {
+        ...state,
         step: STEPS.CROSSING,
         journey: completeDreamJourney(
           state.journey,
@@ -65,6 +85,7 @@ export function journeyReducer(state, action) {
 
     case EVENTS.CONFIRM_PASS:
       return {
+        ...state,
         step: STEPS.CONFIRMATION,
         journey: completePassage(state.journey),
       };
@@ -76,7 +97,10 @@ export function journeyReducer(state, action) {
       };
 
     case EVENTS.RESTART:
-      return initialAppState;
+      return {
+        ...initialAppState,
+        profile: state.profile,
+      };
 
     default:
       return state;
