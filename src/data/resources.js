@@ -1,29 +1,28 @@
 export const dreamResources = {
-  landscape: [
+  symbols: [
     { id: "ocean", label: "Océan", emoji: "🌊" },
     { id: "forest", label: "Forêt", emoji: "🌲" },
     { id: "desert", label: "Désert", emoji: "🏜️" },
     { id: "mountain", label: "Montagne", emoji: "⛰️" },
-  ],
-
-  presence: [
     { id: "whale", label: "Baleine", emoji: "🐋" },
     { id: "fox", label: "Renard", emoji: "🦊" },
     { id: "owl", label: "Chouette", emoji: "🦉" },
     { id: "butterfly", label: "Papillon", emoji: "🦋" },
-  ],
-
-  object: [
     { id: "key", label: "Clé", emoji: "🗝️" },
     { id: "feather", label: "Plume", emoji: "🪶" },
     { id: "lantern", label: "Lanterne", emoji: "🏮" },
     { id: "mirror", label: "Miroir", emoji: "🪞" },
-  ],
-
-  atmosphere: [
     { id: "mist", label: "Brume", emoji: "🌫️" },
     { id: "moonlight", label: "Clair de lune", emoji: "🌙" },
     { id: "warm-rain", label: "Pluie chaude", emoji: "🌧️" },
     { id: "silence", label: "Silence", emoji: "✨" },
+  ],
+  sensations: [
+    { id: "joy", label: "Joie", emoji: "☀️" },
+    { id: "calm", label: "Calme", emoji: "🫧" },
+    { id: "wonder", label: "Émerveillement", emoji: "✨" },
+    { id: "tenderness", label: "Tendresse", emoji: "💗" },
+    { id: "courage", label: "Courage", emoji: "🔥" },
+    { id: "freedom", label: "Liberté", emoji: "🕊️" },
   ],
 };
