@@ -1,16 +1,25 @@
-# React + Vite
+# NAO Dreams
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+## Supabase
 
-Currently, two official plugins are available:
+The app synchronizes a started journey to Supabase after every state change. Local
+storage remains the source used to restore an in-progress journey if the visitor is
+offline or Supabase is not configured.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+1. Run `supabase/migrations/20260718000000_create_dream_journeys.sql` in the
+   Supabase SQL editor (or through your Supabase migration workflow).
+2. In Vercel, add the following environment variables to the required environments:
+   - `VITE_SUPABASE_URL`: `https://lzkuwiutppzxmglsvvol.supabase.co`
+   - `VITE_SUPABASE_PUBLISHABLE_KEY`: the project's publishable key (the legacy
+     anon key also works when set as `VITE_SUPABASE_ANON_KEY`).
+3. Redeploy the application. Vite exposes only variables prefixed with `VITE_` to
+   the browser; never place a Supabase service-role key in these variables.
 
-## React Compiler
+Copy `.env.example` to `.env.local` for local development. The app continues to work
+without those variables, but remote synchronization is skipped.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Scripts
 
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+- `npm run dev` — start the Vite development server.
+- `npm run build` — produce a production build.
+- `npm run lint` — run Oxlint.

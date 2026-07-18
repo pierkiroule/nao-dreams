@@ -10,6 +10,7 @@ import Pass from "../pages/Pass";
 import Confirmation from "../pages/Confirmation";
 import Ocean from "../pages/Ocean";
 import { generateDreamBubble } from "../services/dreamService";
+import { syncJourney } from "../services/syncService";
 import {
   clearAppState,
   loadAppState,
@@ -42,6 +43,12 @@ export default function App() {
   useEffect(() => {
     saveAppState(state);
   }, [state]);
+
+  useEffect(() => {
+    syncJourney(state.journey).catch((error) => {
+      console.warn("Impossible de synchroniser le rêve.", error);
+    });
+  }, [state.journey]);
 
   const actions = useMemo(
     () => ({

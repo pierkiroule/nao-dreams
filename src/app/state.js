@@ -26,6 +26,7 @@ export const EVENTS = {
 };
 
 export const initialJourney = {
+  id: null,
   naoId: APP_CONFIG.defaultNaoId,
   seriesId: APP_CONFIG.defaultSeriesId,
   selections: {},
