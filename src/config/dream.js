@@ -1,10 +1,5 @@
 export const DREAM_CONFIG = {
-  selectionCategories: [
-    "landscape",
-    "presence",
-    "object",
-    "atmosphere",
-  ],
+  selectionCount: 3,
 
   crossingDuration: 3200,
   crossingMessageDuration: 900,
