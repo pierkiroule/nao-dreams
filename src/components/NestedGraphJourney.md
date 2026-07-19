@@ -16,6 +16,13 @@ symboles choisies dans un même journey produisent les cooccurrences. `bubble_li
 reste exclusivement le graphe éditorial de navigation. Après migration, exécuter
 `select public.refresh_bubble_graph_stats();` (ou planifier ce recalcul côté serveur).
 
+Le parcours narratif est complété par `dream_seeds` (phrase projective liée au
+trio) et `dream_seed_reflections` (texte personnel privé, non partageable par
+défaut). La migration `202607190002_add_dream_seeds_and_private_reflections.sql`
+doit être appliquée après celle des statistiques. La phrase de fallback est stable
+pour un même trio, ne contient ni conseil ni interprétation, et le texte libre
+n’est jamais transmis aux événements analytiques.
+
 Lorsqu’un projet Supabase est configuré mais qu’aucun réseau n’est encore publié
 (ou que la lecture est temporairement indisponible), le réseau embarqué complet est
 utilisé automatiquement. L’utilisateur peut donc toujours démarrer son parcours;

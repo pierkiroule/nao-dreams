@@ -4,9 +4,9 @@ import { getChildNodes, getNetworkEdges, getPublishedNetwork, getRootNodes } fro
 import { createOrResumeJourney, replaceJourneyChoice } from "../services/syncService";
 import { getLinkVisualStrength, getNetworkPositions, getVisualScale } from "./graphMath";
 import { TRANSITION_DURATIONS, TRANSITION_STATES } from "./graphTransition";
+import { MAX_REFLECTION_LENGTH, SCREEN_RESONANCE, SELECTION_PROMPTS } from "./journeyNarrative";
+import { createOrResumeDreamSeed, saveDreamReflection } from "../services/dreamSeedService";
 
-const QUESTION = "Quel emoji résonne le plus avec tes besoins du moment ?";
-const DEPTH_LABELS = ["Première résonance sur trois", "Deuxième résonance sur trois", "Résonance finale"];
 
 export default function NestedGraphJourney({ journey, onComplete, loading = false }) {
   const [network, setNetwork] = useState(null);
@@ -16,6 +16,8 @@ export default function NestedGraphJourney({ journey, onComplete, loading = fals
   const [phase, setPhase] = useState(TRANSITION_STATES.IDLE);
   const [selected, setSelected] = useState(null);
   const [error, setError] = useState("");
+  const [dreamSeed, setDreamSeed] = useState(null);
+  const [finalPhase, setFinalPhase] = useState(null);
   const reducedMotion = useReducedMotion();
   const timers = useRef([]);
   const depth = path.length + 1;
@@ -60,8 +62,18 @@ export default function NestedGraphJourney({ journey, onComplete, loading = fals
       timers.current.push(window.setTimeout(async () => {
         if (depth === 3) {
           setPath(nextPath); setPhase(TRANSITION_STATES.COMPLETED);
-          trackEvent("graph_journey_completed", { network_id: network.id, depth: 3 });
-          timers.current.push(window.setTimeout(() => onComplete({ networkId: network.id, bubbleIds: nextPath.map((item) => item.bubbleId), choices: nextPath.map((item) => ({ id: item.bubbleId, emoji: item.emoji, text: item.label })) }), reducedMotion ? 220 : 850));
+          setFinalPhase("revealing_trio");
+          trackEvent("emoji_trio_completed", { network_id: network.id, depth: 3 });
+          trackEvent("trio_constellation_revealed", { network_id: network.id, reduced_motion: reducedMotion });
+          timers.current.push(window.setTimeout(async () => {
+            setFinalPhase("loading_dream_seed");
+            try {
+              trackEvent("dream_seed_requested", { network_id: network.id });
+              const seed = await createOrResumeDreamSeed({ journeyId: journey.id, networkId: network.id, bubbleIds: nextPath.map((item) => item.bubbleId) });
+              setDreamSeed(seed); setFinalPhase("collecting_reflection");
+              trackEvent("dream_seed_revealed", { network_id: network.id, generation_mode: seed.generationMode, reduced_motion: reducedMotion });
+            } catch { setError("La bulle n’a pas pu émerger pour le moment."); setFinalPhase("revealing_trio"); trackEvent("dream_seed_failed", { network_id: network.id }); }
+          }, reducedMotion ? 180 : 700));
           return;
         }
         try {
@@ -89,11 +101,12 @@ export default function NestedGraphJourney({ journey, onComplete, loading = fals
 
   if (error && !network) return <p className="page-text" role="alert">{error}</p>;
   if (!network) return <p className="page-text" aria-live="polite">Le réseau onirique apparaît…</p>;
+  if (finalPhase) return <DreamSeedReveal path={path} seed={dreamSeed} phase={finalPhase} journey={journey} network={network} onComplete={onComplete} />;
   const locked = phase !== "idle" || loading;
   const maximumCooccurrence = Math.max(1, ...edges.map((edge) => edge.cooccurrenceCount ?? 0));
   return <section className={`nested-graph ${phase !== "idle" ? `nested-graph--${phase}` : ""}`}>
-    <header className="nested-graph__header"><p className="network-eyebrow">L’inconscient partagé de NAO</p><h1>{QUESTION}</h1></header>
-    <p className="sr-only" aria-live="polite">{DEPTH_LABELS[depth - 1]}</p>
+    <header className="nested-graph__header"><p className="network-eyebrow">L’inconscient partagé de NAO</p><h1>{SELECTION_PROMPTS[depth - 1]}</h1></header>
+    <p className="sr-only" aria-live="polite">{SCREEN_RESONANCE[depth - 1]}</p>
     <div className="graph-progress" aria-hidden="true">{[0, 1, 2].map((item) => <i key={item} className={item < path.length ? "is-complete" : ""} />)}</div>
     {path.length > 0 && <button type="button" className="graph-back" onClick={goBack} disabled={locked}>Revenir à la résonance précédente</button>}
     <div className="graph-scene">
@@ -120,6 +133,54 @@ function GraphLink({ edge, nodes, positions, maximumCooccurrence, structural = f
   const visual = structural ? { opacity: 0.1, width: 0.7 } : getLinkVisualStrength(edge.cooccurrenceCount, maximumCooccurrence);
   const score = Number.isFinite(edge.strength) ? edge.strength : null;
   return <line className={structural ? "graph-link--structural" : "graph-link--observed"} x1={source.left} y1={source.top} x2={target.left} y2={target.top} style={{ opacity: score === null ? visual.opacity : 0.12 + score * 0.68, strokeWidth: score === null ? visual.width : 0.4 + score * 3.2 }} />;
+}
+
+function DreamSeedReveal({ path, seed, phase, journey, network, onComplete }) {
+  const [reflection, setReflection] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+  const reflectionStarted = useRef(false);
+
+  async function release() {
+    if (!seed || saving) return;
+    setSaving(true); setMessage("");
+    try {
+      if (reflection.trim()) {
+        await saveDreamReflection({ dreamSeedId: seed.id, journeyId: journey.id, content: reflection });
+        trackEvent("dream_reflection_saved", { network_id: network.id, length_bucket: reflection.length > 500 ? "501-1000" : "1-500" });
+      } else {
+        trackEvent("dream_reflection_skipped", { network_id: network.id });
+      }
+      trackEvent("dream_bubble_released", { network_id: network.id, has_reflection: Boolean(reflection.trim()) });
+      onComplete({ networkId: network.id, bubbleIds: path.map((item) => item.bubbleId), choices: path.map((item) => ({ id: item.bubbleId, emoji: item.emoji, text: item.label })), dreamSeedId: seed.id });
+    } catch {
+      setMessage("Les mots restent ici. Tu peux réessayer quand la connexion reviendra.");
+      setSaving(false);
+    }
+  }
+
+  return <section className={`dream-seed-reveal dream-seed-reveal--${phase}`}>
+    <p className="sr-only" aria-live="polite">{seed ? "Ton trio est apparu. Une bulle de rêve vient d’émerger." : "Ton trio est apparu."}</p>
+    <div className="trio-constellation" aria-label="Ton trio symbolique">
+      {path.map((item) => <span key={item.bubbleId} aria-label={item.label}>{item.emoji}</span>)}
+    </div>
+    <h1 className="page-title">•° Voici ton trio. Trois symboles réunis qui nous transportent un peu plus loin dans l’Odyssée O•°.</h1>
+    {!seed ? <p className="page-text" aria-live="polite">Une petite bulle de rêve approche…</p> : <>
+      <p className="dream-seed-transition">Poursuivons l’Odyssée O•° en découvrant la petite bulle de rêve née de cette constellation.</p>
+      <article className="dream-seed-bubble" tabIndex="-1">
+        <span aria-hidden="true">◌</span>
+        <p>{seed.phrase}</p>
+      </article>
+      <div className="reflection-field">
+        <label htmlFor="dream-reflection">Tu peux noter ici les sensations, images ou mots spontanés qui émergent en découvrant cette petite bulle.</label>
+        <textarea id="dream-reflection" value={reflection} maxLength={MAX_REFLECTION_LENGTH} rows="5" onChange={(event) => { setReflection(event.target.value); if (event.target.value && !reflectionStarted.current) { reflectionStarted.current = true; trackEvent("dream_reflection_started", { network_id: network.id }); } }} placeholder="Une image, une couleur, une matière, un mot, une sensation, un souvenir…" />
+        <p>Tu peux aussi laisser cet espace vide.</p>
+      </div>
+      <p className="dream-seed-flight">Cette petite bulle poursuivra bientôt son voyage vers d’autres Rêveurs de ton Réso•°.</p>
+      {message && <p className="graph-message" role="status">{message}</p>}
+      <button type="button" className="dream-seed-release" disabled={saving} onClick={release}>{saving ? "La bulle prend son élan…" : "Laisser s’envoler la bulle"}</button>
+    </>}
+  </section>;
 }
 
 function useReducedMotion() {
