@@ -8,13 +8,9 @@ export default function Launch({
 }) {
   const [loading, setLoading] = useState(false);
   const [network, setNetwork] = useState(null);
-  const [networkError, setNetworkError] = useState("");
 
   useEffect(() => {
-    getResonanceNetwork().then(setNetwork).catch((error) => {
-      console.error("Le réseau de bulles n’a pas pu être chargé.", error);
-      setNetworkError("Le réseau onirique est indisponible. Réessaie dans un instant.");
-    });
+    getResonanceNetwork().then(setNetwork);
   }, []);
 
   async function handleLaunch(selections) {
@@ -41,7 +37,7 @@ export default function Launch({
 
   return (
     <section className="page dream-launch-page">
-      {networkError ? <p className="form-error" role="alert">{networkError}</p> : network ? (
+      {network ? (
         <DreamConstellation network={network} initialSelections={journey.selections ?? {}} onContinue={handleLaunch} loading={loading} />
       ) : <p className="page-text" aria-live="polite">Le réseau onirique apparaît…</p>}
     </section>
