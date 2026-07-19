@@ -12,7 +12,7 @@ import Ocean from "../pages/Ocean";
 import Account from "../pages/Account";
 import { generateDreamBubble } from "../services/dreamService";
 import { syncJourney } from "../services/syncService";
-import { createProfile } from "../services/profileService";
+import { createAccount, login } from "../services/profileService";
 import {
   clearAppState,
   loadAppState,
@@ -55,8 +55,13 @@ export default function App() {
 
   const actions = useMemo(
     () => ({
-      async createProfile(pseudonym) {
-        const profile = await createProfile(pseudonym);
+      async createAccount(credentials) {
+        const profile = await createAccount(credentials);
+        dispatch({ type: EVENTS.CREATE_PROFILE, payload: { profile } });
+      },
+
+      async login(credentials) {
+        const profile = await login(credentials);
         dispatch({ type: EVENTS.CREATE_PROFILE, payload: { profile } });
       },
 

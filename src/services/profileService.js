@@ -20,20 +20,16 @@ export function validatePseudonym(value) {
   return null;
 }
 
-function profileErrorMessage(error) {
+function profileErrorMessage(error, action = "créer le compte") {
   if (error.code === "23505") {
     return "Ce pseudo est déjà utilisé. Essaie-en un autre.";
   }
 
-  if (/anonymous/i.test(error.message)) {
-    return "Les connexions anonymes doivent être activées dans Supabase Auth.";
-  }
-
-  return error.message || "Impossible de créer le compte.";
+  return error.message || `Impossible de ${action}.`;
 }
 
-function logProfileError(error) {
-  console.error("[NAO profile] PROFILE ERROR", {
+function logAuthError(label, error) {
+  console.error(`[NAO profile] ${label} ERROR`, {
     message: error.message,
     code: error.code,
     details: error.details,
@@ -42,34 +38,70 @@ function logProfileError(error) {
   });
 }
 
-export async function createProfile(pseudonym) {
+function validateCredentials({ pseudonym, email, password }, { needsPseudonym }) {
+  if (needsPseudonym) {
+    const pseudonymError = validatePseudonym(pseudonym);
+    if (pseudonymError) return pseudonymError;
+  }
+
+  if (!email.trim()) return "Renseigne ton adresse email.";
+  if (!/^\S+@\S+\.\S+$/.test(email.trim())) return "Renseigne une adresse email valide.";
+  if (!password) return "Renseigne ton mot de passe.";
+
+  return null;
+}
+
+function profileFromUser(user, fallbackPseudonym) {
+  return {
+    id: user.id,
+    pseudonym:
+      user.user_metadata?.pseudonym ??
+      user.user_metadata?.display_name ??
+      fallbackPseudonym ??
+      user.email?.split("@")[0] ??
+      "Rêveur",
+    createdAt: user.created_at ?? new Date().toISOString(),
+  };
+}
+
+export async function createAccount({ pseudonym, email, password }) {
   if (!isSupabaseConnected()) {
     throw new Error("La connexion à Supabase n'est pas configurée.");
   }
 
+  const validationError = validateCredentials(
+    { pseudonym, email, password },
+    { needsPseudonym: true },
+  );
+  if (validationError) throw new Error(validationError);
+
   const client = getSupabaseClient();
-  const { error: authError } = await client.auth.signInAnonymously();
+  const normalizedPseudonym = normalizePseudonym(pseudonym);
+  const { data: authData, error: authError } = await client.auth.signUp({
+    email: email.trim(),
+    password,
+    options: {
+      data: {
+        pseudonym: normalizedPseudonym,
+        display_name: normalizedPseudonym,
+      },
+    },
+  });
 
   if (authError) {
-    logProfileError(authError);
+    logAuthError("SIGNUP", authError);
     throw new Error(profileErrorMessage(authError));
   }
 
-  const { data: authData, error: getUserError } = await client.auth.getUser();
-  console.debug("[NAO profile] USER:", authData?.user);
-
-  if (getUserError || !authData?.user?.id) {
-    if (getUserError) {
-      logProfileError(getUserError);
-    }
+  if (!authData?.user?.id) {
     throw new Error("Aucune session Supabase active.");
   }
 
-  const profile = {
-    id: authData.user.id,
-    pseudonym: normalizePseudonym(pseudonym),
-    createdAt: new Date().toISOString(),
-  };
+  if (!authData.session) {
+    throw new Error("Vérifie ton adresse email avant de te connecter.");
+  }
+
+  const profile = profileFromUser(authData.user, normalizedPseudonym);
   const payload = {
     id: profile.id,
     username: profile.pseudonym,
@@ -86,9 +118,37 @@ export async function createProfile(pseudonym) {
 
   console.debug("[NAO profile] PROFILE DATA:", data);
   if (error) {
-    logProfileError(error);
+    logAuthError("PROFILE", error);
     throw new Error(profileErrorMessage(error));
   }
 
   return profile;
+}
+
+export async function login({ email, password }) {
+  if (!isSupabaseConnected()) {
+    throw new Error("La connexion à Supabase n'est pas configurée.");
+  }
+
+  const validationError = validateCredentials(
+    { email, password },
+    { needsPseudonym: false },
+  );
+  if (validationError) throw new Error(validationError);
+
+  const { data, error } = await getSupabaseClient().auth.signInWithPassword({
+    email: email.trim(),
+    password,
+  });
+
+  if (error) {
+    logAuthError("LOGIN", error);
+    throw new Error(profileErrorMessage(error, "te connecter"));
+  }
+
+  if (!data?.user?.id) {
+    throw new Error("Aucune session Supabase active.");
+  }
+
+  return profileFromUser(data.user);
 }

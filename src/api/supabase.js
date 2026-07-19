@@ -50,9 +50,27 @@ function createClient(url, key) {
 
   return {
     auth: {
-      async signInAnonymously() {
+      async signUp({ email, password, options } = {}) {
         const result = await request(`${url}/auth/v1/signup`, key, {
-          body: {},
+          body: {
+            email,
+            password,
+            data: options?.data,
+          },
+        });
+        accessToken = result.data?.access_token ?? null;
+
+        return {
+          data: result.data
+            ? { user: result.data.user, session: result.data }
+            : null,
+          error: result.error,
+        };
+      },
+
+      async signInWithPassword({ email, password } = {}) {
+        const result = await request(`${url}/auth/v1/token?grant_type=password`, key, {
+          body: { email, password },
         });
         accessToken = result.data?.access_token ?? null;
 
