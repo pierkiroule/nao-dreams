@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import Layout from "../components/Layout";
 import Home from "../pages/Home";
 import Receive from "../pages/Receive";
@@ -12,7 +12,7 @@ import Ocean from "../pages/Ocean";
 import Account from "../pages/Account";
 import { generateDreamBubble } from "../services/dreamService";
 import { syncJourney } from "../services/syncService";
-import { createProfile } from "../services/profileService";
+import { initializeAnonymousPlayer } from "../services/anonymousPlayer";
 import {
   clearAppState,
   loadAppState,
@@ -37,6 +37,9 @@ const PAGE_COMPONENTS = {
 };
 
 export default function App() {
+  const [isStarting, setIsStarting] = useState(false);
+  const [startError, setStartError] = useState("");
+  const hasStartedRef = useRef(false);
   const [state, dispatch] = useReducer(
     journeyReducer,
     initialAppState,
@@ -53,11 +56,31 @@ export default function App() {
     });
   }, [state.journey]);
 
+  const initializeNao = useCallback(async () => {
+    if (hasStartedRef.current) return;
+
+    hasStartedRef.current = true;
+    setStartError("");
+    setIsStarting(true);
+    try {
+      const profile = await initializeAnonymousPlayer();
+      dispatch({ type: EVENTS.CREATE_PROFILE, payload: { profile } });
+    } catch (error) {
+      setStartError(error.message || "Impossible de préparer ton identité onirique.");
+      hasStartedRef.current = false;
+    } finally {
+      setIsStarting(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    initializeNao();
+  }, [initializeNao]);
+
   const actions = useMemo(
     () => ({
-      async createProfile(pseudonym) {
-        const profile = await createProfile(pseudonym);
-        dispatch({ type: EVENTS.CREATE_PROFILE, payload: { profile } });
+      retryStart() {
+        initializeNao();
       },
 
       openAccount() {
@@ -119,7 +142,7 @@ export default function App() {
         dispatch({ type: EVENTS.RESTART });
       },
     }),
-    [],
+    [initializeNao],
   );
 
   const CurrentPage = PAGE_COMPONENTS[state.step] ?? Home;
@@ -131,6 +154,8 @@ export default function App() {
         state={state}
         journey={state.journey}
         profile={state.profile}
+        isStarting={isStarting}
+        startError={startError}
         actions={actions}
       />
     </Layout>
