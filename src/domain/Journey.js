@@ -12,7 +12,7 @@ export function createJourney({
     selections: {},
     networkId: null,
     dream: "",
-    status: JOURNEY_STATUS.RECEIVED,
+    status: JOURNEY_STATUS.CHOOSING,
     receivedAt: new Date().toISOString(),
     createdAt: null,
     passedAt: null,
@@ -31,13 +31,5 @@ export function completeDreamJourney(
     dream,
     status: JOURNEY_STATUS.DREAM_REVEALED,
     createdAt: new Date().toISOString(),
-  };
-}
-
-export function completePassage(journey) {
-  return {
-    ...journey,
-    status: JOURNEY_STATUS.PASSED,
-    passedAt: new Date().toISOString(),
   };
 }

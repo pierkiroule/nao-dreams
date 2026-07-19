@@ -1,37 +1,49 @@
-import { useState } from "react";
-import NestedGraphJourney from "../components/NestedGraphJourney";
+import { useMemo, useState } from "react";
+import Button from "../components/Button";
+import { constellations, getConstellation } from "../data/resources";
 
-export default function Launch({
-  journey,
-  actions,
-}) {
-  const [loading, setLoading] = useState(false);
+export default function Launch({ actions }) {
+  const [constellationId, setConstellationId] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const constellation = useMemo(() => getConstellation(constellationId), [constellationId]);
 
-  async function handleLaunch(selections) {
-    if (
-      !selections.bubbleIds?.length ||
-      loading
-    ) {
-      return;
-    }
+  function selectConstellation(id) {
+    setConstellationId(id);
+    setSelectedIds([]);
+  }
 
-    try {
-      setLoading(true);
+  function toggleEmoji(id) {
+    setSelectedIds((current) => current.includes(id)
+      ? current.filter((selectedId) => selectedId !== id)
+      : current.length === 3 ? current : [...current, id]);
+  }
 
-      await actions.launch(selections);
-    } catch (error) {
-      console.error(
-        "La Bulle Onirique n’a pas pu être créée.",
-        error,
-      );
-
-      setLoading(false);
-    }
+  function reveal() {
+    if (!constellation || selectedIds.length !== 3) return;
+    const choices = constellation.emojis.filter(({ id }) => selectedIds.includes(id));
+    actions.showScenes({ networkId: constellation.id, bubbleIds: selectedIds, choices });
   }
 
   return (
-    <section className="page dream-launch-page">
-      <NestedGraphJourney journey={journey} onComplete={handleLaunch} loading={loading} />
+    <section className="page constellation-page">
+      <div>
+        <p className="eyebrow">1 · Choisis une constellation</p>
+        <div className="constellation-list" aria-label="Constellations">
+          {constellations.map((item) => <button key={item.id} type="button" className={`constellation-button ${item.id === constellationId ? "is-selected" : ""}`} aria-pressed={item.id === constellationId} onClick={() => selectConstellation(item.id)}><span>{item.emoji}</span>{item.name}</button>)}
+        </div>
+      </div>
+
+      {constellation && <div className="emoji-choice" aria-live="polite">
+        <p className="eyebrow">2 · Choisis trois signes <span>{selectedIds.length}/3</span></p>
+        <div className="emoji-grid">
+          {constellation.emojis.map((item) => {
+            const selected = selectedIds.includes(item.id);
+            return <button key={item.id} type="button" className={`emoji-button ${selected ? "is-selected" : ""}`} aria-label={item.keywords.join(", ")} aria-pressed={selected} onClick={() => toggleEmoji(item.id)}><span aria-hidden="true">{item.emoji}</span></button>;
+          })}
+        </div>
+      </div>}
+
+      {constellation && <Button onClick={reveal} disabled={selectedIds.length !== 3}>Voir trois scènes</Button>}
     </section>
   );
 }

@@ -1,16 +1,12 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import Layout from "../components/Layout";
 import Home from "../pages/Home";
-import Receive from "../pages/Receive";
 import Launch from "../pages/Launch";
-import Crossing from "../pages/Crossing";
+import Scenes from "../pages/Scenes";
 import Reveal from "../pages/Reveal";
-import DreamDepth from "../pages/DreamDepth";
-import Pass from "../pages/Pass";
-import Confirmation from "../pages/Confirmation";
-import Ocean from "../pages/Ocean";
+import PassDream from "../pages/PassDream";
 import Account from "../pages/Account";
-import { generateDreamBubble } from "../services/dreamService";
+import { generateDreamScenes } from "../services/dreamService";
 import { syncJourney } from "../services/syncService";
 import { initializeAnonymousPlayer } from "../services/anonymousPlayer";
 import {
@@ -19,20 +15,16 @@ import {
   saveAppState,
 } from "../services/journeyService";
 import { journeyReducer } from "./journeyMachine";
-import { getJourneyProgress } from "./progress";
+import { trackEvent } from "../api/analytics";
 import { EVENTS, STEPS, initialAppState } from "./state";
 import { APP_CONFIG } from "../config/app";
 
 const PAGE_COMPONENTS = {
   [STEPS.HOME]: Home,
-  [STEPS.RECEIVE]: Receive,
-  [STEPS.LAUNCH]: Launch,
-  [STEPS.CROSSING]: Crossing,
+  [STEPS.CHOOSE]: Launch,
+  [STEPS.SCENES]: Scenes,
   [STEPS.REVEAL]: Reveal,
-  [STEPS.DREAM_DEPTH]: DreamDepth,
-  [STEPS.PASS]: Pass,
-  [STEPS.CONFIRMATION]: Confirmation,
-  [STEPS.OCEAN]: Ocean,
+  [STEPS.PASS]: PassDream,
   [STEPS.ACCOUNT]: Account,
 };
 
@@ -91,9 +83,9 @@ export default function App() {
         dispatch({ type: EVENTS.CLOSE_ACCOUNT });
       },
 
-      scan() {
+      startDream() {
         dispatch({
-          type: EVENTS.SCAN,
+          type: EVENTS.START_DREAM,
           payload: {
             naoId: APP_CONFIG.defaultNaoId,
             seriesId: APP_CONFIG.defaultSeriesId,
@@ -101,40 +93,30 @@ export default function App() {
         });
       },
 
-      embark() {
-        dispatch({ type: EVENTS.EMBARK });
-      },
-
-      async launch(selections) {
-        const dream = await generateDreamBubble(selections);
-
+      showScenes(selections) {
+        const scenes = generateDreamScenes(selections);
         dispatch({
-          type: EVENTS.START_CROSSING,
+          type: EVENTS.SHOW_SCENES,
           payload: {
             selections,
-            dream,
+            scenes,
           },
         });
+        trackEvent("dream_scenes_offered", { constellation: selections.networkId, emoji_ids: selections.bubbleIds });
       },
 
-      finishCrossing() {
-        dispatch({ type: EVENTS.FINISH_CROSSING });
+      reveal(dream, constellation) {
+        dispatch({ type: EVENTS.REVEAL_DREAM, payload: { dream } });
+        trackEvent("dream_revealed", { constellation });
       },
 
-      openDreamDepth() {
-        dispatch({ type: EVENTS.OPEN_DREAM_DEPTH });
+      openPass() {
+        dispatch({ type: EVENTS.OPEN_PASS });
       },
 
-      continueToPass() {
-        dispatch({ type: EVENTS.CONTINUE_TO_PASS });
-      },
-
-      confirmPass() {
-        dispatch({ type: EVENTS.CONFIRM_PASS });
-      },
-
-      openOcean() {
-        dispatch({ type: EVENTS.OPEN_OCEAN });
+      passDream(passer) {
+        dispatch({ type: EVENTS.PASS_DREAM, payload: { passer } });
+        trackEvent("dream_passed", { passer_id: passer.id, cycle_position: passer.position });
       },
 
       restart() {
@@ -146,10 +128,8 @@ export default function App() {
   );
 
   const CurrentPage = PAGE_COMPONENTS[state.step] ?? Home;
-  const progress = getJourneyProgress(state.step);
-
   return (
-    <Layout progress={progress}>
+    <Layout>
       <CurrentPage
         state={state}
         journey={state.journey}

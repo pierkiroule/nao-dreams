@@ -1,55 +1,18 @@
-import { DREAM_CONFIG } from "../config/dream";
-
-const labels = {
-  ocean: "un océan immobile",
-  forest: "une forêt renversée",
-  desert: "un désert de lumière",
-  mountain: "une montagne endormie",
-
-  whale: "une baleine",
-  fox: "un renard",
-  owl: "une chouette",
-  butterfly: "un papillon",
-
-  key: "une clé",
-  feather: "une plume",
-  lantern: "une lanterne",
-  mirror: "un miroir",
-
-  mist: "dans la brume",
-  moonlight: "sous un clair de lune",
-  "warm-rain": "sous une pluie chaude",
-  silence: "dans un silence profond",
-  calm: "un calme profond",
-  shelter: "un refuge doux",
-  wonder: "un éclat d’émerveillement",
-  tenderness: "une tendresse lumineuse",
-  freedom: "un souffle de liberté",
-  courage: "un courage tranquille",
-  moon: "un clair de lune",
-  fire: "un feu paisible",
-  garden: "un jardin secret",
-  bird: "un oiseau migrateur",
-};
-
-function wait(duration) {
-  return new Promise((resolve) => {
-    window.setTimeout(resolve, duration);
-  });
+function join(items) {
+  return items.length === 2 ? items.join(" et ") : `${items.slice(0, -1).join(", ")} et ${items.at(-1)}`;
 }
 
-export async function generateDreamBubble(selections) {
-  await wait(DREAM_CONFIG.localGenerationDelay);
-
-  const [first, second, third] = selections.choices ?? [];
-  const landscape = first?.text ?? labels[first?.id] ?? "un paysage inconnu";
-  const presence = second?.text ?? labels[second?.id] ?? "une présence";
-  const object = third?.text ?? labels[third?.id] ?? "un objet oublié";
-  const atmosphere = "dans la nuit";
+export function generateDreamScenes(selections) {
+  const choices = selections.choices ?? [];
+  const [first, second, third] = choices;
+  const firstAssociations = first?.associations ?? ["une porte sans mur", "un tapis qui flotte"];
+  const secondAssociations = second?.associations ?? ["un nuage plié", "un plafond de sable"];
+  const thirdAssociations = third?.associations ?? ["une tasse qui écoute", "une ombre en papier"];
+  const subject = join(choices.map((choice) => choice.emoji));
 
   return [
-    `${atmosphere}, ${presence} naviguait au-dessus de ${landscape}.`,
-    `Elle transportait ${object}, sans savoir qui l'avait déposé là.`,
-    "À l'horizon, une île apparaissait chaque fois qu'un rêveur fermait les yeux.",
-  ].join(" ");
+    `${subject} traversaient la pièce sur ${firstAssociations[0]}. Au plafond, ${secondAssociations[0]} apprenait à nager pendant que ${thirdAssociations[0]} comptait les ombres.`,
+    `Dans un ascenseur de brume, ${thirdAssociations[1]} portait ${subject}. ${firstAssociations[1]} ouvrait ses yeux au son de ${secondAssociations[1]}.`,
+    `${secondAssociations[0]} servait le thé à ${subject}. Derrière la fenêtre, ${firstAssociations[1]} devenait lentement ${thirdAssociations[0]}.`,
+  ];
 }

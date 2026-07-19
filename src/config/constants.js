@@ -1,10 +1,7 @@
 export const JOURNEY_STATUS = {
   IDLE: "idle",
-  RECEIVED: "received",
-  CHOOSING_RESOURCES: "choosing_resources",
+  CHOOSING: "choosing",
   DREAM_REVEALED: "dream_revealed",
-  READY_TO_PASS: "ready_to_pass",
-  PASSED: "passed",
 };
 
 export const STORAGE_KEYS = {
