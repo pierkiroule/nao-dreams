@@ -119,6 +119,19 @@ function createClient(url, key) {
           };
         },
 
+        delete() {
+          return {
+            eq(column, value) {
+              const query = `?${encodeURIComponent(column)}=eq.${encodeURIComponent(value)}`;
+              return request(`${endpoint}${query}`, key, {
+                method: "DELETE",
+                prefer: "return=minimal",
+                accessToken: session?.access_token,
+              });
+            },
+          };
+        },
+
         select(columns = "*") {
           const query = new URLSearchParams({ select: columns });
           const run = () => request(`${endpoint}?${query}`, key, {
@@ -128,6 +141,10 @@ function createClient(url, key) {
           const builder = {
             eq(column, value) {
               query.set(column, `eq.${value}`);
+              return builder;
+            },
+            in(column, values) {
+              query.set(column, `in.(${values.map((value) => `"${value}"`).join(",")})`);
               return builder;
             },
             order(column, { ascending = true } = {}) {
