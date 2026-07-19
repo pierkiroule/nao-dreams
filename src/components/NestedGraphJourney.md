@@ -10,6 +10,12 @@ nécessaires. Les statistiques sont optionnelles : `resonanceScore` et
 `cooccurrenceCount` produisent respectivement une variation de taille et de lien
 bornée, ou un rendu neutre lorsqu’elles sont absentes.
 
+La migration `supabase/migrations/202607190001_add_bubble_graph_stats.sql` ajoute
+la couche vivante : les occurrences sont calculées par emoji et les paires de
+symboles choisies dans un même journey produisent les cooccurrences. `bubble_links`
+reste exclusivement le graphe éditorial de navigation. Après migration, exécuter
+`select public.refresh_bubble_graph_stats();` (ou planifier ce recalcul côté serveur).
+
 Lorsqu’un projet Supabase est configuré mais qu’aucun réseau n’est encore publié
 (ou que la lecture est temporairement indisponible), le réseau embarqué complet est
 utilisé automatiquement. L’utilisateur peut donc toujours démarrer son parcours;

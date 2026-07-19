@@ -143,6 +143,10 @@ function createClient(url, key) {
               query.set(column, `eq.${value}`);
               return builder;
             },
+            in(column, values) {
+              query.set(column, `in.(${values.map((value) => `"${value}"`).join(",")})`);
+              return builder;
+            },
             order(column, { ascending = true } = {}) {
               query.set("order", `${column}.${ascending ? "asc" : "desc"}`);
               return builder;
