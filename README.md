@@ -2,19 +2,23 @@
 
 ## Supabase
 
-The app creates a profile from the pseudonym entered on the home page, then saves
-its started journeys in the existing `public.journeys` table. Local storage remains
-the source used to restore an in-progress journey if the visitor is offline.
+The app uses the existing `public.profiles` and `public.journeys` tables supplied by
+your project. It creates an anonymous Supabase Auth user first, then creates the
+profile with that Auth user ID, as required by `profiles.id → auth.users.id`.
 
-1. Apply the account migrations, in order, in the Supabase SQL editor (or through
-   your Supabase migration workflow):
-   - `supabase/migrations/20260718010000_create_profiles.sql`
-   - `supabase/migrations/20260719000000_link_profiles_to_journeys.sql`
-2. In Vercel, add the following environment variables to the required environments:
+Before deploying, configure Supabase:
+
+1. In **Authentication → Providers**, enable **Anonymous sign-ins**.
+2. Ensure the `anon` role can insert into `public.profiles` and insert/update
+   `public.journeys` with RLS policies appropriate to your project.
+3. If the API reports that `public.profiles` is missing although the table exists,
+   reload the PostgREST schema cache in the SQL editor:
+   `notify pgrst, 'reload schema';`
+4. In Vercel, add the following environment variables to the required environments:
    - `VITE_SUPABASE_URL`: `https://lzkuwiutppzxmglsvvol.supabase.co`
    - `VITE_SUPABASE_PUBLISHABLE_KEY`: the project's publishable key (the legacy
      anon key also works when set as `VITE_SUPABASE_ANON_KEY`).
-3. Redeploy the application. Vite exposes only variables prefixed with `VITE_` to
+5. Redeploy the application. Vite exposes only variables prefixed with `VITE_` to
    the browser; never place a Supabase service-role key in these variables.
 
 Copy `.env.example` to `.env.local` for local development. The app continues to work

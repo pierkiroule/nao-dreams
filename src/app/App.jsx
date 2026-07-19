@@ -48,10 +48,10 @@ export default function App() {
   }, [state]);
 
   useEffect(() => {
-    syncJourney(state.journey, state.profile).catch((error) => {
+    syncJourney(state.journey).catch((error) => {
       console.warn("Impossible de synchroniser le rêve.", error);
     });
-  }, [state.journey, state.profile]);
+  }, [state.journey]);
 
   const actions = useMemo(
     () => ({

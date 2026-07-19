@@ -3,17 +3,16 @@ import { JOURNEY_STATUS } from "../config/constants";
 
 const TABLE_NAME = "journeys";
 
-function toJourneyRecord(journey, profile) {
+function toJourneyRecord(journey) {
   return {
     id: journey.id,
     locale: "fr",
     completed: journey.status === JOURNEY_STATUS.PASSED,
-    profile_id: profile?.id ?? null,
     created_at: journey.receivedAt,
   };
 }
 
-export async function syncJourney(journey, profile) {
+export async function syncJourney(journey) {
   if (!journey?.id || journey.status === JOURNEY_STATUS.IDLE) {
     return { synced: false, reason: "journey_not_started" };
   }
@@ -24,7 +23,7 @@ export async function syncJourney(journey, profile) {
 
   const { error } = await getSupabaseClient()
     .from(TABLE_NAME)
-    .upsert(toJourneyRecord(journey, profile), { onConflict: "id" });
+    .upsert(toJourneyRecord(journey), { onConflict: "id" });
 
   if (error) {
     throw error;

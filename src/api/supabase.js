@@ -11,34 +11,46 @@ function createSupabaseError(response, details) {
   });
 }
 
-async function request(url, key, record, prefer) {
+async function request(url, key, body, prefer) {
   const response = await fetch(url, {
     method: "POST",
     headers: {
       apikey: key,
       Authorization: `Bearer ${key}`,
       "Content-Type": "application/json",
-      Prefer: prefer,
+      ...(prefer ? { Prefer: prefer } : {}),
     },
-    body: JSON.stringify(record),
+    body: JSON.stringify(body),
   });
 
+  let data = null;
+  if (response.status !== 204) {
+    try {
+      data = await response.json();
+    } catch {
+      data = null;
+    }
+  }
+
   if (response.ok) {
-    return { error: null };
+    return { data, error: null };
   }
 
-  let details;
-  try {
-    details = await response.json();
-  } catch {
-    details = null;
-  }
-
-  return { error: createSupabaseError(response, details) };
+  return { data: null, error: createSupabaseError(response, data) };
 }
 
 function createClient(url, key) {
   return {
+    auth: {
+      async signInAnonymously() {
+        const result = await request(`${url}/auth/v1/signup`, key, {}, null);
+        return {
+          data: result.data ? { user: result.data.user } : null,
+          error: result.error,
+        };
+      },
+    },
+
     from(tableName) {
       const endpoint = `${url}/rest/v1/${tableName}`;
 
