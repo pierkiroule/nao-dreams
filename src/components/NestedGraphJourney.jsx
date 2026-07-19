@@ -6,6 +6,7 @@ import { getLinkVisualStrength, getNetworkPositions, getVisualScale } from "./gr
 import { TRANSITION_DURATIONS, TRANSITION_STATES } from "./graphTransition";
 import { MAX_REFLECTION_LENGTH, SCREEN_RESONANCE, SELECTION_PROMPTS } from "./journeyNarrative";
 import { createOrResumeDreamSeed, saveDreamReflection } from "../services/dreamSeedService";
+import CulturalResonances from "./CulturalResonances";
 
 
 export default function NestedGraphJourney({ journey, onComplete, loading = false }) {
@@ -165,6 +166,7 @@ function DreamSeedReveal({ path, seed, phase, journey, network, onComplete }) {
       {path.map((item) => <span key={item.bubbleId} aria-label={item.label}>{item.emoji}</span>)}
     </div>
     <h1 className="page-title">•° Voici ton trio. Trois symboles réunis qui nous transportent un peu plus loin dans l’Odyssée O•°.</h1>
+    <CulturalResonances choices={path.map((item) => ({ id: item.bubbleId, emoji: item.emoji, text: item.label }))} />
     {!seed ? <p className="page-text" aria-live="polite">Une petite bulle de rêve approche…</p> : <>
       <p className="dream-seed-transition">Poursuivons l’Odyssée O•° en découvrant la petite bulle de rêve née de cette constellation.</p>
       <article className="dream-seed-bubble" tabIndex="-1">
