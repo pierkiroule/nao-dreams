@@ -3,14 +3,14 @@
 ## Supabase
 
 The app uses the existing `public.profiles` and `public.journeys` tables supplied by
-your project. New users create an email/password Supabase Auth account before the
-app creates their profile with that Auth user ID, as required by
-`profiles.id → auth.users.id`. Existing users sign in with their email and
-password rather than attempting to create a duplicate account.
+your project. On first launch, the app creates an anonymous Supabase Auth session,
+generates a pseudonym, and stores only an approximate location. The anonymous
+session is kept in browser storage; a player who clears it or changes device cannot
+recover their universe until a permanent sign-in method is added.
 
 Before deploying, configure Supabase:
 
-1. In **Authentication → Providers**, enable the **Email** provider.
+1. In **Authentication → Providers**, enable **Anonymous sign-ins**.
 2. Ensure the `anon` role can insert into `public.profiles` and insert/update
    `public.journeys` with RLS policies appropriate to your project.
 3. If the API reports that `public.profiles` is missing although the table exists,
