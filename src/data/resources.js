@@ -31,8 +31,13 @@ function makeChildren(values) {
 }
 
 export const dreamResources = {
-  network: sensoryNeeds.map((need) => ({
-    ...need,
-    children: makeChildren(secondLevel),
-  })),
+  network: {
+    id: null,
+    question: "Quel émoji résonne le plus avec tes besoins du moment ?",
+    maxDepth: 3,
+    roots: sensoryNeeds.map((need) => ({
+      ...need,
+      children: makeChildren(secondLevel),
+    })),
+  },
 };

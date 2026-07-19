@@ -8,7 +8,7 @@ function getLevelChoices(network, path) {
   return path.reduce(
     (choices, selectedId) =>
       choices.find(({ id }) => id === selectedId)?.children ?? [],
-    network,
+    network.roots,
   );
 }
 
@@ -23,7 +23,7 @@ export default function DreamConstellation({
   loading,
 }) {
   const [path, setPath] = useState(
-    initialSelections.symbols ?? [],
+    initialSelections.bubbleIds ?? initialSelections.symbols ?? [],
   );
   const [isTransitioning, setIsTransitioning] = useState(false);
 
@@ -33,7 +33,7 @@ export default function DreamConstellation({
   );
   const level = path.length + 1;
   const links = useMemo(() => networkLinks(choices), [choices]);
-  const complete = path.length === 3;
+  const complete = path.length === network.maxDepth || choices.length === 0;
 
   useEffect(() => {
     if (!isTransitioning) {
@@ -96,7 +96,11 @@ export default function DreamConstellation({
           type="button"
           className="constellation-continue"
           disabled={loading}
-          onClick={() => onContinue({ symbols: path })}
+          onClick={() => onContinue({
+            networkId: network.id,
+            bubbleIds: path,
+            choices: chosenItems.map(({ id, emoji, label }) => ({ id, emoji, text: label })),
+          })}
         >
           {loading ? "La bulle se forme…" : "Faire émerger mon rêve"}
         </button>
@@ -110,8 +114,8 @@ export default function DreamConstellation({
   return (
     <section className="resonance-network">
       <header className="constellation-header">
-        <p className="network-eyebrow">Niveau {level} sur 3</p>
-        <h1 className="page-title">Quel émoji résonne le plus avec tes besoins du moment&nbsp;?</h1>
+        <p className="network-eyebrow">Niveau {level} sur {network.maxDepth}</p>
+        <h1 className="page-title">{network.question}</h1>
         <p className="page-text">Choisis celui qui t’attire, sans chercher à l’expliquer.</p>
       </header>
 

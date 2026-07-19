@@ -41,10 +41,10 @@ function wait(duration) {
 export async function generateDreamBubble(selections) {
   await wait(DREAM_CONFIG.localGenerationDelay);
 
-  const [first, second, third] = selections.symbols ?? [];
-  const landscape = labels[first] ?? "un paysage inconnu";
-  const presence = labels[second] ?? "une présence";
-  const object = labels[third] ?? "un objet oublié";
+  const [first, second, third] = selections.choices ?? [];
+  const landscape = first?.text ?? labels[first?.id] ?? "un paysage inconnu";
+  const presence = second?.text ?? labels[second?.id] ?? "une présence";
+  const object = third?.text ?? labels[third?.id] ?? "un objet oublié";
   const atmosphere = "dans la nuit";
 
   return [
