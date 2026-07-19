@@ -3,8 +3,10 @@
 ## Supabase
 
 The app uses the existing `public.profiles` and `public.journeys` tables supplied by
-your project. It creates an anonymous Supabase Auth user first, then creates the
-profile with that Auth user ID, as required by `profiles.id → auth.users.id`.
+your project. On first launch, the app creates an anonymous Supabase Auth session,
+generates a pseudonym, and stores only an approximate location. The anonymous
+session is kept in browser storage; a player who clears it or changes device cannot
+recover their universe until a permanent sign-in method is added.
 
 Before deploying, configure Supabase:
 

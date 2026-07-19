@@ -13,11 +13,7 @@ function createSupabaseError(response, details) {
   });
 }
 
-async function request(
-  url,
-  key,
-  { method = "POST", body, prefer, accessToken } = {},
-) {
+async function request(url, key, { method = "POST", body, prefer, accessToken } = {}) {
   const response = await fetch(url, {
     method,
     headers: {
@@ -38,71 +34,59 @@ async function request(
     }
   }
 
-  if (response.ok) {
-    return { data, error: null };
-  }
-
-  return { data: null, error: createSupabaseError(response, data) };
+  return response.ok
+    ? { data, error: null }
+    : { data: null, error: createSupabaseError(response, data) };
 }
 
 function createClient(url, key) {
-  let accessToken = null;
+  const sessionStorageKey = "nao-supabase-session";
+  let session = null;
+
+  try {
+    session = JSON.parse(localStorage.getItem(sessionStorageKey));
+  } catch {
+    localStorage.removeItem(sessionStorageKey);
+  }
+
+  function saveSession(nextSession) {
+    session = nextSession;
+    if (session) localStorage.setItem(sessionStorageKey, JSON.stringify(session));
+    else localStorage.removeItem(sessionStorageKey);
+  }
+
+  function authResult(result) {
+    if (result.data?.access_token) saveSession(result.data);
+    return {
+      data: result.data ? { user: result.data.user, session: result.data } : null,
+      error: result.error,
+    };
+  }
 
   return {
     auth: {
-      async signInAnonymously() {
+      async signInAnonymously({ options } = {}) {
         const result = await request(`${url}/auth/v1/signup`, key, {
-          body: {},
+          body: { data: options?.data },
         });
-        accessToken = result.data?.access_token ?? null;
-
-        return {
-          data: result.data
-            ? { user: result.data.user, session: result.data }
-            : null,
-          error: result.error,
-        };
+        return authResult(result);
       },
 
-      async getUser() {
-        if (!accessToken) {
-          return { data: { user: null }, error: null };
-        }
-
-        const result = await request(`${url}/auth/v1/user`, key, {
-          method: "GET",
-          accessToken,
-        });
-        return {
-          data: { user: result.data },
-          error: result.error,
-        };
+      async getSession() {
+        return { data: { session }, error: null };
       },
     },
 
     from(tableName) {
       const endpoint = `${url}/rest/v1/${tableName}`;
-
       return {
-        insert(record) {
-          return request(endpoint, key, {
-            body: record,
-            prefer: "return=minimal",
-            accessToken,
-          });
-        },
-
         upsert(record, { onConflict, returnRepresentation = false } = {}) {
-          const query = onConflict
-            ? `?on_conflict=${encodeURIComponent(onConflict)}`
-            : "";
-          const returning = returnRepresentation
-            ? "return=representation"
-            : "return=minimal";
+          const query = onConflict ? `?on_conflict=${encodeURIComponent(onConflict)}` : "";
+          const returning = returnRepresentation ? "return=representation" : "return=minimal";
           return request(`${endpoint}${query}`, key, {
             body: record,
             prefer: `resolution=merge-duplicates,${returning}`,
-            accessToken,
+            accessToken: session?.access_token,
           });
         },
       };
@@ -117,10 +101,7 @@ export function isSupabaseConnected() {
 }
 
 export function getSupabaseClient() {
-  if (!isSupabaseConnected()) {
-    return null;
-  }
-
+  if (!isSupabaseConnected()) return null;
   client ??= createClient(supabaseUrl, supabaseKey);
   return client;
 }

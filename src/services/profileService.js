@@ -1,39 +1,46 @@
 import { getSupabaseClient, isSupabaseConnected } from "../api/supabase";
 
 const TABLE_NAME = "profiles";
+const adjectives = ["Silencieux", "Lointain", "Solaire", "Nocturne", "Flottant", "Secret"];
+const creatures = ["Renard", "Hibou", "Cerf", "Papillon", "Corbeau", "Dauphin"];
 
-export function normalizePseudonym(value) {
-  return value.trim().replace(/\s+/g, " ");
+export function generatePseudonym() {
+  const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+  const creature = creatures[Math.floor(Math.random() * creatures.length)];
+  const number = Math.floor(10 + Math.random() * 90);
+  return `${creature} ${adjective} ${number}`;
 }
 
-export function validatePseudonym(value) {
-  const pseudonym = normalizePseudonym(value);
+export function getApproximateLocation() {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      resolve(null);
+      return;
+    }
 
-  if (pseudonym.length < 3 || pseudonym.length > 30) {
-    return "Choisis un pseudo entre 3 et 30 caractères.";
-  }
-
-  if (!/^[\p{L}\p{N} ._'-]+$/u.test(pseudonym)) {
-    return "Utilise uniquement des lettres, chiffres, espaces ou . _ ' -.";
-  }
-
-  return null;
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => resolve({
+        latitude: Number(coords.latitude.toFixed(2)),
+        longitude: Number(coords.longitude.toFixed(2)),
+        precisionKm: Math.max(1, Math.round(coords.accuracy / 1000)),
+      }),
+      () => resolve(null),
+      { enableHighAccuracy: false, timeout: 5000, maximumAge: 3_600_000 },
+    );
+  });
 }
 
-function profileErrorMessage(error) {
-  if (error.code === "23505") {
-    return "Ce pseudo est déjà utilisé. Essaie-en un autre.";
-  }
-
-  if (/anonymous/i.test(error.message)) {
-    return "Les connexions anonymes doivent être activées dans Supabase Auth.";
-  }
-
-  return error.message || "Impossible de créer le compte.";
+function profileFromUser(user, pseudonym, location = null) {
+  return {
+    id: user.id,
+    pseudonym: user.user_metadata?.pseudonym ?? pseudonym ?? "Rêveur",
+    createdAt: user.created_at ?? new Date().toISOString(),
+    locationLabel: location ? "Zone approximative autour de vous" : "Zone non partagée",
+  };
 }
 
-function logProfileError(error) {
-  console.error("[NAO profile] PROFILE ERROR", {
+function logProfileError(label, error) {
+  console.error(`[NAO profile] ${label} ERROR`, {
     message: error.message,
     code: error.code,
     details: error.details,
@@ -42,53 +49,41 @@ function logProfileError(error) {
   });
 }
 
-export async function createProfile(pseudonym) {
+export async function startNao() {
   if (!isSupabaseConnected()) {
     throw new Error("La connexion à Supabase n'est pas configurée.");
   }
 
   const client = getSupabaseClient();
-  const { error: authError } = await client.auth.signInAnonymously();
+  const { data: sessionData } = await client.auth.getSession();
+  if (sessionData?.session?.user) return profileFromUser(sessionData.session.user);
 
-  if (authError) {
-    logProfileError(authError);
-    throw new Error(profileErrorMessage(authError));
-  }
+  const pseudonym = generatePseudonym();
+  const location = await getApproximateLocation();
+  const { data, error } = await client.auth.signInAnonymously({
+    options: { data: { pseudonym, display_name: pseudonym } },
+  });
 
-  const { data: authData, error: getUserError } = await client.auth.getUser();
-  console.debug("[NAO profile] USER:", authData?.user);
-
-  if (getUserError || !authData?.user?.id) {
-    if (getUserError) {
-      logProfileError(getUserError);
-    }
-    throw new Error("Aucune session Supabase active.");
-  }
-
-  const profile = {
-    id: authData.user.id,
-    pseudonym: normalizePseudonym(pseudonym),
-    createdAt: new Date().toISOString(),
-  };
-  const payload = {
-    id: profile.id,
-    username: profile.pseudonym,
-    display_name: profile.pseudonym,
-  };
-  console.debug("[NAO profile] PROFILE PAYLOAD:", payload);
-
-  const { data, error } = await client
-    .from(TABLE_NAME)
-    .upsert(payload, {
-      onConflict: "id",
-      returnRepresentation: true,
-    });
-
-  console.debug("[NAO profile] PROFILE DATA:", data);
   if (error) {
-    logProfileError(error);
-    throw new Error(profileErrorMessage(error));
+    logProfileError("ANONYMOUS AUTHENTICATION", error);
+    throw error;
   }
+  if (!data?.user?.id) throw new Error("Aucune session Supabase active.");
 
+  const profile = profileFromUser(data.user, pseudonym, location);
+  const { error: profileError } = await client.from(TABLE_NAME).upsert(
+    {
+      id: profile.id,
+      username: profile.pseudonym,
+      display_name: profile.pseudonym,
+      latitude_approx: location?.latitude ?? null,
+      longitude_approx: location?.longitude ?? null,
+      location_precision_km: location?.precisionKm ?? null,
+      location_visible: Boolean(location),
+    },
+    { onConflict: "id" },
+  );
+
+  if (profileError) logProfileError("PROFILE", profileError);
   return profile;
 }
