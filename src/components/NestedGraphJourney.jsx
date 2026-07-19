@@ -163,8 +163,19 @@ function DreamSeedReveal({ path, seed, phase, journey, network, onComplete }) {
     setSaving(true); setMessage("");
     try {
       if (reflection.trim()) {
-        await saveDreamReflection({ dreamSeedId: seed.id, journeyId: journey.id, content: reflection });
-        trackEvent("dream_reflection_saved", { network_id: network.id, length_bucket: reflection.length > 500 ? "501-1000" : "1-500" });
+        if (seed.isLocal) {
+          trackEvent("dream_reflection_deferred", { network_id: network.id, length_bucket: reflection.length > 500 ? "501-1000" : "1-500" });
+        } else {
+          try {
+            await saveDreamReflection({ dreamSeedId: seed.id, journeyId: journey.id, content: reflection });
+            trackEvent("dream_reflection_saved", { network_id: network.id, length_bucket: reflection.length > 500 ? "501-1000" : "1-500" });
+          } catch (error) {
+            // A private echo is optional. Never trap the player on this page when
+            // its persistence policy or connection is temporarily unavailable.
+            console.warn("Écho distant différé.", error);
+            trackEvent("dream_reflection_deferred", { network_id: network.id, length_bucket: reflection.length > 500 ? "501-1000" : "1-500" });
+          }
+        }
       } else {
         trackEvent("dream_reflection_skipped", { network_id: network.id });
       }

@@ -5,7 +5,7 @@ import { resolveDreamPhrase } from "./dreamPhrases";
 export async function createOrResumeDreamSeed({ journeyId, networkId, bubbleIds }) {
   const phrase = resolveDreamPhrase(bubbleIds);
   const localSeed = { id: crypto.randomUUID(), journeyId, networkId, bubbleIds, phrase, generationMode: "fallback" };
-  if (!isSupabaseConnected()) return localSeed;
+  if (!isSupabaseConnected()) return { ...localSeed, isLocal: true };
   try {
     const client = getSupabaseClient();
     const { data: existing, error: readError } = await client.from("dream_seeds")
@@ -14,7 +14,7 @@ export async function createOrResumeDreamSeed({ journeyId, networkId, bubbleIds 
     if (readError) throw readError;
     if (existing?.[0]) {
       const seed = existing[0];
-      return { id: seed.id, journeyId: seed.journey_id, networkId: seed.network_id, bubbleIds: [seed.bubble_1_id, seed.bubble_2_id, seed.bubble_3_id], phrase: seed.text, generationMode: seed.source };
+      return { id: seed.id, journeyId: seed.journey_id, networkId: seed.network_id, bubbleIds: [seed.bubble_1_id, seed.bubble_2_id, seed.bubble_3_id], phrase: seed.text, generationMode: seed.source, isLocal: false };
     }
     const record = { id: localSeed.id, journey_id: journeyId, network_id: networkId, bubble_1_id: bubbleIds[0], bubble_2_id: bubbleIds[1], bubble_3_id: bubbleIds[2], text: phrase, source: "fallback" };
     const { error } = await client.from("dream_seeds").insert(record);
@@ -24,7 +24,7 @@ export async function createOrResumeDreamSeed({ journeyId, networkId, bubbleIds 
     // or migration error must never leave a player waiting under the trio.
     console.warn("Graine distante indisponible, utilisation de la bulle locale.", error);
   }
-  return localSeed;
+  return { ...localSeed, isLocal: true };
 }
 
 export async function saveDreamReflection({ dreamSeedId, journeyId, content }) {
