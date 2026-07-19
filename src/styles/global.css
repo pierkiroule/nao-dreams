@@ -238,6 +238,77 @@ button {
   text-align: center;
 }
 
+.eyebrow {
+  margin: 0 0 12px;
+  color: var(--blue-300);
+  font-size: 0.76rem;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.eyebrow span { color: var(--moon); }
+
+.constellation-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.constellation-button {
+  display: flex;
+  min-height: 82px;
+  flex-direction: column;
+  gap: 5px;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  border-radius: var(--radius-small);
+  color: var(--mist);
+  background: rgba(15, 27, 60, 0.58);
+}
+
+.constellation-button span { font-size: 1.65rem; }
+
+.constellation-button.is-selected,
+.emoji-button.is-selected {
+  border-color: var(--border-active);
+  background: linear-gradient(145deg, rgba(69, 96, 193, 0.82), rgba(35, 56, 124, 0.82));
+  box-shadow: 0 0 30px rgba(77, 107, 213, 0.2);
+}
+
+.emoji-choice { animation: page-arrival 300ms ease both; }
+
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.emoji-button {
+  display: grid;
+  min-height: 66px;
+  place-items: center;
+  padding: 8px;
+  border-radius: 18px;
+  background: rgba(15, 27, 60, 0.58);
+}
+
+.emoji-button span { font-size: clamp(1.65rem, 8vw, 2.25rem); }
+
+.account-link {
+  min-height: auto;
+  padding: 3px;
+  border: 0;
+  color: var(--muted);
+  background: transparent;
+  box-shadow: none;
+  font-size: 0.78rem;
+}
+
+.account-link::before { display: none; }
+
 .actions {
   display: grid;
   gap: 12px;

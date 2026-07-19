@@ -1,9 +1,7 @@
 import { APP_CONFIG } from "../config/app";
-import ProgressBar from "./ProgressBar";
 
 export default function Layout({
   children,
-  progress = null,
 }) {
   return (
     <main className="app-shell">
@@ -16,10 +14,6 @@ export default function Layout({
           {APP_CONFIG.subtitle}
         </p>
       </header>
-
-      {progress && (
-        <ProgressBar progress={progress} />
-      )}
 
       {children}
     </main>

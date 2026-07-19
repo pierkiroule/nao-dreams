@@ -9,7 +9,7 @@ function toJourneyRecord(journey, userId) {
     user_id: userId,
     locale: "fr",
     network_id: journey.networkId,
-    completed: journey.status === JOURNEY_STATUS.PASSED,
+    completed: journey.status === JOURNEY_STATUS.DREAM_REVEALED,
     created_at: journey.receivedAt,
   };
 }
