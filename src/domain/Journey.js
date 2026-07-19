@@ -6,6 +6,7 @@ export function createJourney({
   seriesId = APP_CONFIG.defaultSeriesId,
 } = {}) {
   return {
+    id: crypto.randomUUID(),
     naoId,
     seriesId,
     selections: {},
