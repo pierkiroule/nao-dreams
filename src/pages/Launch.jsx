@@ -1,18 +1,21 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import DreamConstellation from "../components/DreamConstellation";
-import { DREAM_CONFIG } from "../config/dream";
-import { dreamResources } from "../data/resources";
+import { getResonanceNetwork } from "../services/bubbleNetworkService";
 
 export default function Launch({
   journey,
   actions,
 }) {
   const [loading, setLoading] = useState(false);
+  const [network, setNetwork] = useState(null);
+
+  useEffect(() => {
+    getResonanceNetwork().then(setNetwork);
+  }, []);
 
   async function handleLaunch(selections) {
     if (
-      selections.symbols.length !== DREAM_CONFIG.selectionCount ||
-      !selections.sensation ||
+      !selections.bubbleIds?.length ||
       loading
     ) {
       return;
@@ -34,13 +37,9 @@ export default function Launch({
 
   return (
     <section className="page dream-launch-page">
-      <DreamConstellation
-        symbols={dreamResources.symbols}
-        sensations={dreamResources.sensations}
-        initialSelections={journey.selections ?? {}}
-        onContinue={handleLaunch}
-        loading={loading}
-      />
+      {network ? (
+        <DreamConstellation network={network} initialSelections={journey.selections ?? {}} onContinue={handleLaunch} loading={loading} />
+      ) : <p className="page-text" aria-live="polite">Le réseau onirique apparaît…</p>}
     </section>
   );
 }

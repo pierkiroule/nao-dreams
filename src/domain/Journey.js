@@ -10,6 +10,7 @@ export function createJourney({
     naoId,
     seriesId,
     selections: {},
+    networkId: null,
     dream: "",
     status: JOURNEY_STATUS.RECEIVED,
     receivedAt: new Date().toISOString(),
@@ -26,6 +27,7 @@ export function completeDreamJourney(
   return {
     ...journey,
     selections,
+    networkId: selections.networkId,
     dream,
     status: JOURNEY_STATUS.DREAM_REVEALED,
     createdAt: new Date().toISOString(),

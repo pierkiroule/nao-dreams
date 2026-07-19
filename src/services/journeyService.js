@@ -1,6 +1,6 @@
 import { STORAGE_KEYS } from "../config/constants";
 
-const APP_VERSION = 3;
+const APP_VERSION = 4;
 
 export function saveAppState(state) {
   try {

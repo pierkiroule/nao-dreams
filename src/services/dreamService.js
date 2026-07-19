@@ -20,6 +20,16 @@ const labels = {
   moonlight: "sous un clair de lune",
   "warm-rain": "sous une pluie chaude",
   silence: "dans un silence profond",
+  calm: "un calme profond",
+  shelter: "un refuge doux",
+  wonder: "un éclat d’émerveillement",
+  tenderness: "une tendresse lumineuse",
+  freedom: "un souffle de liberté",
+  courage: "un courage tranquille",
+  moon: "un clair de lune",
+  fire: "un feu paisible",
+  garden: "un jardin secret",
+  bird: "un oiseau migrateur",
 };
 
 function wait(duration) {
@@ -31,10 +41,10 @@ function wait(duration) {
 export async function generateDreamBubble(selections) {
   await wait(DREAM_CONFIG.localGenerationDelay);
 
-  const [first, second, third] = selections.symbols ?? [];
-  const landscape = labels[first] ?? "un paysage inconnu";
-  const presence = labels[second] ?? "une présence";
-  const object = labels[third] ?? "un objet oublié";
+  const [first, second, third] = selections.choices ?? [];
+  const landscape = first?.text ?? labels[first?.id] ?? "un paysage inconnu";
+  const presence = second?.text ?? labels[second?.id] ?? "une présence";
+  const object = third?.text ?? labels[third?.id] ?? "un objet oublié";
   const atmosphere = "dans la nuit";
 
   return [

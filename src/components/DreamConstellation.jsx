@@ -1,137 +1,161 @@
-import { useMemo, useState } from "react";
-import { DREAM_CONFIG } from "../config/dream";
+import { useEffect, useMemo, useState } from "react";
 
-const POSITIONS = [
-  [50, 12], [23, 22], [77, 23], [12, 46],
-  [50, 42], [88, 47], [25, 67], [74, 68],
-  [50, 87], [8, 82], [92, 83], [37, 29],
-  [64, 31], [35, 55], [66, 55], [50, 64],
+const NETWORK_POSITIONS = [
+  [50, 15], [20, 31], [80, 31], [18, 70], [50, 83], [82, 70],
 ];
 
-function selectedLinks(items) {
-  return items.flatMap((item, index) =>
-    items.slice(index + 1).map((other) => [item.id, other.id]),
+function getLevelChoices(network, path) {
+  return path.reduce(
+    (choices, selectedId) =>
+      choices.find(({ id }) => id === selectedId)?.children ?? [],
+    network.roots,
   );
 }
 
+function networkLinks(choices) {
+  return choices.slice(1).map((choice) => [choices[0].id, choice.id]);
+}
+
 export default function DreamConstellation({
-  symbols,
-  sensations,
+  network,
   initialSelections,
   onContinue,
   loading,
 }) {
-  const [selectedSymbols, setSelectedSymbols] = useState(
-    initialSelections.symbols ?? [],
+  const [path, setPath] = useState(
+    initialSelections.bubbleIds ?? initialSelections.symbols ?? [],
   );
-  const [sensation, setSensation] = useState(
-    initialSelections.sensation ?? "",
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  const choices = useMemo(
+    () => getLevelChoices(network, path),
+    [network, path],
   );
+  const level = path.length + 1;
+  const links = useMemo(() => networkLinks(choices), [choices]);
+  const complete = path.length === network.maxDepth || choices.length === 0;
 
-  const complete =
-    selectedSymbols.length === DREAM_CONFIG.selectionCount;
-  const visibleSymbols = complete
-    ? symbols.filter(({ id }) => selectedSymbols.includes(id))
-    : symbols;
-  const links = useMemo(
-    () => selectedLinks(visibleSymbols),
-    [visibleSymbols],
-  );
-
-  function toggleSymbol(id) {
-    setSelectedSymbols((current) => {
-      if (current.includes(id)) {
-        return current.filter((symbol) => symbol !== id);
-      }
-
-      if (current.length === DREAM_CONFIG.selectionCount) {
-        return current;
-      }
-
-      return [...current, id];
-    });
-  }
-
-  function getPosition(symbol, index) {
-    if (!complete) {
-      return POSITIONS[symbols.findIndex(({ id }) => id === symbol.id)];
+  useEffect(() => {
+    if (!isTransitioning) {
+      return undefined;
     }
 
-    return [[50, 20], [23, 68], [77, 68]][index];
+    const timer = window.setTimeout(
+      () => setIsTransitioning(false),
+      520,
+    );
+
+    return () => window.clearTimeout(timer);
+  }, [isTransitioning]);
+
+  function selectChoice(choice) {
+    if (isTransitioning || loading || complete) {
+      return;
+    }
+
+    setIsTransitioning(true);
+    window.setTimeout(() => {
+      setPath((current) => [...current, choice.id]);
+    }, 190);
+  }
+
+  function returnToLevel(index) {
+    if (isTransitioning || loading) {
+      return;
+    }
+
+    setPath((current) => current.slice(0, index));
+    setIsTransitioning(true);
+  }
+
+  const chosenItems = path.reduce((items, id) => {
+    const item = getLevelChoices(network, items.map(({ id: itemId }) => itemId))
+      .find((choice) => choice.id === id);
+    return item ? [...items, item] : items;
+  }, []);
+
+  if (complete) {
+    return (
+      <section className="resonance-network resonance-network--complete">
+        <header className="constellation-header">
+          <p className="network-eyebrow">Ta résonance se précise</p>
+          <h1 className="page-title">Voici le chemin qui t’appelle.</h1>
+        </header>
+
+        <div className="resonance-path" aria-label="Chemin de résonance choisi">
+          {chosenItems.map((item, index) => (
+            <div className="resonance-path-item" key={item.id}>
+              <span aria-hidden="true">{item.emoji}</span>
+              <strong>{item.label}</strong>
+              {index < chosenItems.length - 1 && <i aria-hidden="true">→</i>}
+            </div>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          className="constellation-continue"
+          disabled={loading}
+          onClick={() => onContinue({
+            networkId: network.id,
+            bubbleIds: path,
+            choices: chosenItems.map(({ id, emoji, label }) => ({ id, emoji, text: label })),
+          })}
+        >
+          {loading ? "La bulle se forme…" : "Faire émerger mon rêve"}
+        </button>
+        <button type="button" className="network-back" onClick={() => returnToLevel(2)}>
+          Modifier mon dernier choix
+        </button>
+      </section>
+    );
   }
 
   return (
-    <section className="constellation-selection">
+    <section className="resonance-network">
       <header className="constellation-header">
-        <h1 className="page-title">
-          Choisis {DREAM_CONFIG.selectionCount} bulles oniriques
-        </h1>
-        <p className="page-text">Celles qui t’inspirent ici et maintenant.</p>
+        <p className="network-eyebrow">Niveau {level} sur {network.maxDepth}</p>
+        <h1 className="page-title">{network.question}</h1>
+        <p className="page-text">Choisis celui qui t’attire, sans chercher à l’expliquer.</p>
       </header>
 
-      <div className={`constellation-canvas ${complete ? "is-complete" : ""}`}>
-        <svg className="constellation-links" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <div className={`network-canvas ${isTransitioning ? "is-zooming" : ""}`} aria-live="polite">
+        <svg className="network-links" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           {links.map(([from, to]) => {
-            const fromIndex = visibleSymbols.findIndex(({ id }) => id === from);
-            const toIndex = visibleSymbols.findIndex(({ id }) => id === to);
-            const [x1, y1] = getPosition(visibleSymbols[fromIndex], fromIndex);
-            const [x2, y2] = getPosition(visibleSymbols[toIndex], toIndex);
-
-            return <line key={`${from}-${to}`} x1={x1} y1={y1} x2={x2} y2={y2} />;
+            const first = choices.findIndex(({ id }) => id === from);
+            const second = choices.findIndex(({ id }) => id === to);
+            const [x1, y1] = NETWORK_POSITIONS[first];
+            const [x2, y2] = NETWORK_POSITIONS[second];
+            return <line key={to} x1={x1} y1={y1} x2={x2} y2={y2} />;
           })}
         </svg>
 
-        {visibleSymbols.map((symbol, index) => {
-          const [left, top] = getPosition(symbol, index);
-          const selected = selectedSymbols.includes(symbol.id);
-
+        {choices.map((choice, index) => {
+          const [left, top] = NETWORK_POSITIONS[index];
           return (
             <button
-              key={symbol.id}
+              key={choice.id}
               type="button"
-              className={`constellation-orb ${selected ? "is-selected" : ""}`}
-              style={{ left: `${left}%`, top: `${top}%` }}
-              onClick={() => toggleSymbol(symbol.id)}
-              aria-label={symbol.label}
-              aria-pressed={selected}
-              disabled={complete && selected}
+              className="network-node"
+              style={{ left: `${left}%`, top: `${top}%`, "--node-index": index }}
+              onClick={() => selectChoice(choice)}
+              disabled={isTransitioning}
+              aria-label={`Choisir ${choice.label}`}
             >
-              <span aria-hidden="true">{symbol.emoji}</span>
+              <span className="network-node-emoji" aria-hidden="true">{choice.emoji}</span>
+              <span className="network-node-label">{choice.label}</span>
             </button>
           );
         })}
       </div>
 
-      {!complete ? (
-        <p className="constellation-count">
-          {selectedSymbols.length} / {DREAM_CONFIG.selectionCount}
-        </p>
-      ) : (
-        <div className="constellation-resonance">
-          <p className="page-text">Prends le temps de ressentir comment ce trio•° résonne dans ton corps.</p>
-          <h2 className="constellation-tag-title">Choisis la sensation principale à faire circuler dans l’Océan de ton corps.</h2>
-          <div className="sensation-orbs" role="group" aria-label="Sensation à partager">
-            {sensations.map((tag) => (
-              <button
-                key={tag.id}
-                type="button"
-                className={`sensation-orb ${sensation === tag.id ? "is-selected" : ""}`}
-                onClick={() => setSensation(tag.id)}
-                aria-label={tag.label}
-                aria-pressed={sensation === tag.id}
-              >
-                <span aria-hidden="true">{tag.emoji}</span>
-              </button>
-            ))}
-          </div>
-          <button
-            type="button"
-            className="constellation-continue"
-            disabled={!sensation || loading}
-            onClick={() => onContinue({ symbols: selectedSymbols, sensation })}
-          >
-            {loading ? "La bulle se forme…" : "Partager cette sensation"}
-          </button>
+      {path.length > 0 && (
+        <div className="network-steps" aria-label="Niveaux déjà choisis">
+          {chosenItems.map((item, index) => (
+            <button type="button" key={item.id} onClick={() => returnToLevel(index)}>
+              <span aria-hidden="true">{item.emoji}</span> {item.label}
+            </button>
+          ))}
         </div>
       )}
     </section>

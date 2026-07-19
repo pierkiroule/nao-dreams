@@ -2,8 +2,8 @@
 
 ## Supabase
 
-The app uses the existing `public.profiles` and `public.journeys` tables supplied by
-your project. On first launch, the app creates an anonymous Supabase Auth session,
+The app uses the existing `public.profiles`, `public.journeys`, and published bubble
+network tables supplied by your project. On first launch, the app creates an anonymous Supabase Auth session,
 generates a pseudonym, and stores only an approximate location. The anonymous
 session is kept in browser storage; a player who clears it or changes device cannot
 recover their universe until a permanent sign-in method is added.
@@ -13,8 +13,10 @@ Before deploying, configure Supabase:
 1. In **Authentication → Providers**, enable **Anonymous sign-ins**.
 2. Configure the `profiles` trigger to create the profile when an Auth user is
    created. The app only updates that trigger-created row from the frontend.
-3. Ensure the authenticated role can update its own `public.profiles` row and
-   insert/update its own `public.journeys` rows, with `journeys.user_id = auth.uid()`.
+3. Ensure the authenticated role can update its own `public.profiles` row; read the
+   published `bubble_networks`, `bubble_network_roots`, `bubble_links`, and
+   `dream_bubbles`; and insert/update its own `public.journeys` and
+   `public.journey_choices` rows, with `journeys.user_id = auth.uid()`.
 4. If the API reports that `public.profiles` is missing although the table exists,
    reload the PostgREST schema cache in the SQL editor:
    `notify pgrst, 'reload schema';`

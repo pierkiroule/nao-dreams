@@ -34,6 +34,7 @@ export const initialJourney = {
   naoId: APP_CONFIG.defaultNaoId,
   seriesId: APP_CONFIG.defaultSeriesId,
   selections: {},
+  networkId: null,
   dream: "",
   status: JOURNEY_STATUS.IDLE,
   receivedAt: null,

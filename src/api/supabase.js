@@ -120,18 +120,37 @@ function createClient(url, key) {
         },
 
         select(columns = "*") {
-          return {
-            async eq(column, value) {
-              const query = new URLSearchParams({
-                select: columns,
-                [column]: `eq.${value}`,
-              });
-              return request(`${endpoint}?${query}`, key, {
-                method: "GET",
-                accessToken: session?.access_token,
-              });
+          const query = new URLSearchParams({ select: columns });
+          const run = () => request(`${endpoint}?${query}`, key, {
+            method: "GET",
+            accessToken: session?.access_token,
+          });
+          const builder = {
+            eq(column, value) {
+              query.set(column, `eq.${value}`);
+              return builder;
+            },
+            order(column, { ascending = true } = {}) {
+              query.set("order", `${column}.${ascending ? "asc" : "desc"}`);
+              return builder;
+            },
+            limit(value) {
+              query.set("limit", value);
+              return builder;
+            },
+            then(resolve, reject) {
+              return run().then(resolve, reject);
             },
           };
+          return builder;
+        },
+
+        insert(record, { returnRepresentation = false } = {}) {
+          return request(endpoint, key, {
+            body: record,
+            prefer: returnRepresentation ? "return=representation" : "return=minimal",
+            accessToken: session?.access_token,
+          });
         },
       };
     },
