@@ -2410,6 +2410,7 @@ button:focus-visible,
 .nested-graph--completed .graph-node.is-selected { transform:translate(-50%,-50%) scale(1.5); }
 .graph-accessible-list { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
 .graph-message { margin:0; color:#d9e4ff; font-size:.82rem; text-align:center; }
+.graph-sync-notice { margin:0; color:var(--muted); font-size:.78rem; line-height:1.45; text-align:center; }
 @keyframes graph-node-emerge { from { opacity:0; transform:translate(-50%,-50%) scale(.38); } to { opacity:1; transform:translate(-50%,-50%) scale(var(--node-scale)); } }
 @media (max-width:520px) { .graph-scene { min-height:370px; height:54vh; border-radius:30px; } .graph-node { width:92px; min-height:92px; } .graph-node__orb { width:58px; height:58px; } .nested-graph__header h1 { font-size:clamp(1.45rem,7vw,2rem); } }
 @media (prefers-reduced-motion:reduce) { .graph-stars { display:none; } .graph-node, .graph-links, .graph-node__orb { transition-duration:120ms; animation:none !important; } }
