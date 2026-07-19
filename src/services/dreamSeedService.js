@@ -4,7 +4,7 @@ import { resolveDreamPhrase } from "./dreamPhrases";
 
 const DREAM_SEED_TIMEOUT_MS = 1_500;
 
-function getLocalDreamSeed({ journeyId, networkId, bubbleIds }) {
+export function createLocalDreamSeed({ journeyId, networkId, bubbleIds }) {
   return {
     id: crypto.randomUUID(),
     journeyId,
@@ -23,8 +23,7 @@ function withTimeout(promise, timeoutMs) {
   return Promise.race([promise, expiry]).finally(() => clearTimeout(timeout));
 }
 
-export async function createOrResumeDreamSeed({ journeyId, networkId, bubbleIds }) {
-  const localSeed = getLocalDreamSeed({ journeyId, networkId, bubbleIds });
+export async function createOrResumeDreamSeed({ journeyId, networkId, bubbleIds }, localSeed = createLocalDreamSeed({ journeyId, networkId, bubbleIds })) {
   const { phrase } = localSeed;
   if (!isSupabaseConnected()) return localSeed;
   try {

@@ -5,7 +5,7 @@ import { createOrResumeJourney, replaceJourneyChoice } from "../services/syncSer
 import { getLinkVisualStrength, getNetworkPositions, getVisualScale } from "./graphMath";
 import { TRANSITION_DURATIONS, TRANSITION_STATES } from "./graphTransition";
 import { MAX_REFLECTION_LENGTH, SCREEN_RESONANCE, SELECTION_PROMPTS } from "./journeyNarrative";
-import { createOrResumeDreamSeed, saveDreamReflection } from "../services/dreamSeedService";
+import { createLocalDreamSeed, createOrResumeDreamSeed, saveDreamReflection } from "../services/dreamSeedService";
 import CulturalResonances from "./CulturalResonances";
 
 
@@ -69,13 +69,15 @@ export default function NestedGraphJourney({ journey, onComplete, loading = fals
           trackEvent("emoji_trio_completed", { network_id: network.id, depth: 3 });
           trackEvent("trio_constellation_revealed", { network_id: network.id, reduced_motion: reducedMotion });
           timers.current.push(window.setTimeout(async () => {
-            setFinalPhase("loading_dream_seed");
-            try {
-              trackEvent("dream_seed_requested", { network_id: network.id });
-              const seed = await createOrResumeDreamSeed({ journeyId: journey.id, networkId: network.id, bubbleIds: nextPath.map((item) => item.bubbleId) });
-              setDreamSeed(seed); setFinalPhase("collecting_reflection");
-              trackEvent("dream_seed_revealed", { network_id: network.id, generation_mode: seed.generationMode, reduced_motion: reducedMotion });
-            } catch { setError("La bulle n’a pas pu émerger pour le moment."); setFinalPhase("revealing_trio"); trackEvent("dream_seed_failed", { network_id: network.id }); }
+            const seedRequest = { journeyId: journey.id, networkId: network.id, bubbleIds: nextPath.map((item) => item.bubbleId) };
+            const seed = createLocalDreamSeed(seedRequest);
+            // Showing the deterministic local seed first makes this transition
+            // independent from network and database availability.
+            setDreamSeed(seed); setFinalPhase("collecting_reflection");
+            trackEvent("dream_seed_revealed", { network_id: network.id, generation_mode: seed.generationMode, reduced_motion: reducedMotion });
+            createOrResumeDreamSeed(seedRequest, seed).catch((seedError) => {
+              console.warn("Graine de rêve distante différée.", seedError);
+            });
           }, reducedMotion ? 180 : 700));
           return;
         }
@@ -149,19 +151,15 @@ function DreamSeedReveal({ path, seed, phase, journey, network, onComplete }) {
   async function release() {
     if (!seed || saving) return;
     setSaving(true); setMessage("");
-    try {
-      if (reflection.trim()) {
-        await saveDreamReflection({ dreamSeedId: seed.id, journeyId: journey.id, content: reflection });
-        trackEvent("dream_reflection_saved", { network_id: network.id, length_bucket: reflection.length > 500 ? "501-1000" : "1-500" });
-      } else {
-        trackEvent("dream_reflection_skipped", { network_id: network.id });
-      }
-      trackEvent("dream_bubble_released", { network_id: network.id, has_reflection: Boolean(reflection.trim()) });
-      onComplete({ networkId: network.id, bubbleIds: path.map((item) => item.bubbleId), choices: path.map((item) => ({ id: item.bubbleId, emoji: item.emoji, text: item.label })), dreamSeedId: seed.id });
-    } catch {
-      setMessage("Les mots restent ici. Tu peux réessayer quand la connexion reviendra.");
-      setSaving(false);
+    if (reflection.trim()) {
+      saveDreamReflection({ dreamSeedId: seed.id, journeyId: journey.id, content: reflection })
+        .then(() => trackEvent("dream_reflection_saved", { network_id: network.id, length_bucket: reflection.length > 500 ? "501-1000" : "1-500" }))
+        .catch((reflectionError) => console.warn("Réflexion de rêve distante différée.", reflectionError));
+    } else {
+      trackEvent("dream_reflection_skipped", { network_id: network.id });
     }
+    trackEvent("dream_bubble_released", { network_id: network.id, has_reflection: Boolean(reflection.trim()) });
+    onComplete({ networkId: network.id, bubbleIds: path.map((item) => item.bubbleId), choices: path.map((item) => ({ id: item.bubbleId, emoji: item.emoji, text: item.label })), dreamSeedId: seed.id });
   }
 
   return <section className={`dream-seed-reveal dream-seed-reveal--${phase}`}>
