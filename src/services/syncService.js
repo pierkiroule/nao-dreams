@@ -103,6 +103,42 @@ export async function saveJourneyChoice(journeyId, choices) {
   return replaceJourneyChoice(journeyId, choices);
 }
 
+// Exposures capture the six bubbles that were actually presented at a step. This
+// keeps the graph metrics honest: a selection rate can distinguish "chosen" from
+// "shown", rather than only counting the final three choices.
+export async function syncJourneyExposures({ journeyId, networkId, step, nodes }) {
+  if (!isSupabaseConnected() || !journeyId || !networkId || !nodes?.length) return;
+  const client = getSupabaseClient();
+  const { data: existing, error: readError } = await client.from("journey_exposures")
+    .select("id,bubble_id,position,selected")
+    .eq("journey_id", journeyId)
+    .eq("step", step);
+  if (readError) throw readError;
+
+  const known = new Set((existing ?? []).map((exposure) => `${exposure.bubble_id}:${exposure.position}`));
+  const missing = nodes
+    .map((node, index) => ({ journey_id: journeyId, network_id: networkId, bubble_id: node.id, step, position: index + 1, selected: false }))
+    .filter((exposure) => !known.has(`${exposure.bubble_id}:${exposure.position}`));
+  if (!missing.length) return;
+  const { error } = await client.from("journey_exposures").insert(missing);
+  if (error) throw error;
+}
+
+export async function markJourneyExposureSelected({ journeyId, step, bubbleId }) {
+  if (!isSupabaseConnected() || !journeyId || !bubbleId) return;
+  const client = getSupabaseClient();
+  const { data, error: readError } = await client.from("journey_exposures")
+    .select("id")
+    .eq("journey_id", journeyId)
+    .eq("step", step)
+    .eq("bubble_id", bubbleId)
+    .limit(1);
+  if (readError) throw readError;
+  if (!data?.[0]?.id) return;
+  const { error } = await client.from("journey_exposures").update({ selected: true }).eq("id", data[0].id);
+  if (error) throw error;
+}
+
 export async function completeJourney(journey) {
   return syncJourney(journey);
 }

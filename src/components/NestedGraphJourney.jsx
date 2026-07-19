@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { trackEvent } from "../api/analytics";
 import { getChildNodes, getNetworkEdges, getPublishedNetwork, getRootNodes } from "../services/bubbleNetworkService";
-import { createOrResumeJourney, replaceJourneyChoice } from "../services/syncService";
+import { createOrResumeJourney, markJourneyExposureSelected, replaceJourneyChoice, syncJourneyExposures } from "../services/syncService";
 import { getLinkVisualStrength, getNetworkPositions, getVisualScale } from "./graphMath";
 import { TRANSITION_DURATIONS, TRANSITION_STATES } from "./graphTransition";
 import { MAX_REFLECTION_LENGTH, SCREEN_RESONANCE, SELECTION_PROMPTS } from "./journeyNarrative";
@@ -18,6 +18,7 @@ export default function NestedGraphJourney({ journey, onComplete, loading = fals
   const [error, setError] = useState("");
   const [dreamSeed, setDreamSeed] = useState(null);
   const [finalPhase, setFinalPhase] = useState(null);
+  const [syncNotice, setSyncNotice] = useState("");
   const reducedMotion = useReducedMotion();
   const timers = useRef([]);
   const depth = path.length + 1;
@@ -34,7 +35,9 @@ export default function NestedGraphJourney({ journey, onComplete, loading = fals
         setNetwork(nextNetwork); setNodes(roots);
         setEdges(await getNetworkEdges(nextNetwork.id, roots.map((node) => node.id)));
         trackEvent("graph_journey_started", { network_id: nextNetwork.id, depth: 1, reduced_motion: reducedMotion });
-        createOrResumeJourney(journey, nextNetwork.id).catch((syncError) => console.warn("Journey distant différé.", syncError));
+        createOrResumeJourney(journey, nextNetwork.id)
+          .then(() => syncJourneyExposures({ journeyId: journey.id, networkId: nextNetwork.id, step: 1, nodes: roots }))
+          .catch((syncError) => { console.warn("Journey distant différé.", syncError); setSyncNotice("Mode hors ligne : tes choix seront conservés sur cet appareil."); });
       } catch (loadError) {
         if (active) setError(loadError.message || "Le réseau n’a pas pu émerger.");
       }
@@ -55,7 +58,12 @@ export default function NestedGraphJourney({ journey, onComplete, loading = fals
     const nextPath = [...path, chosen];
     setSelected(node.id); setError(""); setPhase(TRANSITION_STATES.FOCUSING);
     trackEvent("graph_node_selected", { network_id: network.id, bubble_id: node.id, depth, reduced_motion: reducedMotion });
-    try { await replaceJourneyChoice(journey.id, nextPath); } catch { setError("Le choix reste dans ce rêve, mais sa sauvegarde sera réessayée."); }
+    try {
+      await Promise.all([
+        replaceJourneyChoice(journey.id, nextPath),
+        markJourneyExposureSelected({ journeyId: journey.id, step: depth, bubbleId: node.id }),
+      ]);
+    } catch { setError("Le choix reste dans ce rêve, mais sa sauvegarde sera réessayée."); }
     const focus = reducedMotion ? 130 : TRANSITION_DURATIONS.focusing;
     timers.current.push(window.setTimeout(async () => {
       setPhase(TRANSITION_STATES.ENTERING);
@@ -72,13 +80,21 @@ export default function NestedGraphJourney({ journey, onComplete, loading = fals
               const seed = await createOrResumeDreamSeed({ journeyId: journey.id, networkId: network.id, bubbleIds: nextPath.map((item) => item.bubbleId) });
               setDreamSeed(seed); setFinalPhase("collecting_reflection");
               trackEvent("dream_seed_revealed", { network_id: network.id, generation_mode: seed.generationMode, reduced_motion: reducedMotion });
-            } catch { setError("La bulle n’a pas pu émerger pour le moment."); setFinalPhase("revealing_trio"); trackEvent("dream_seed_failed", { network_id: network.id }); }
+            } catch {
+              // This is a last-resort guard for unexpected client failures. Keep
+              // the journey actionable instead of showing the loading copy forever.
+              const phrase = "Une lumière douce relie ces trois signes, comme une porte entrouverte sur l’océan.";
+              setDreamSeed({ id: crypto.randomUUID(), journeyId: journey.id, networkId: network.id, bubbleIds: nextPath.map((item) => item.bubbleId), phrase, generationMode: "fallback" });
+              setFinalPhase("collecting_reflection");
+              trackEvent("dream_seed_failed", { network_id: network.id });
+            }
           }, reducedMotion ? 180 : 700));
           return;
         }
         try {
           const children = await getChildNodes(network.id, node.id);
           setPath(nextPath); setNodes(children); setEdges(await getNetworkEdges(network.id, children.map((child) => child.id))); setSelected(null); setPhase(TRANSITION_STATES.REVEALING);
+          syncJourneyExposures({ journeyId: journey.id, networkId: network.id, step: depth + 1, nodes: children }).catch(() => setSyncNotice("Mode hors ligne : tes choix seront conservés sur cet appareil."));
           trackEvent("graph_depth_entered", { network_id: network.id, bubble_id: node.id, depth: depth + 1 });
           timers.current.push(window.setTimeout(() => setPhase(TRANSITION_STATES.IDLE), reducedMotion ? 160 : TRANSITION_DURATIONS.revealing));
         } catch (loadError) { setPhase(TRANSITION_STATES.IDLE); setSelected(null); setError(loadError.message || "Cette résonance ne peut pas être ouverte."); }
@@ -105,7 +121,7 @@ export default function NestedGraphJourney({ journey, onComplete, loading = fals
   const locked = phase !== "idle" || loading;
   const maximumCooccurrence = Math.max(1, ...edges.map((edge) => edge.cooccurrenceCount ?? 0));
   return <section className={`nested-graph ${phase !== "idle" ? `nested-graph--${phase}` : ""}`}>
-    <header className="nested-graph__header"><p className="network-eyebrow">L’inconscient partagé de NAO</p><h1>{SELECTION_PROMPTS[depth - 1]}</h1></header>
+    <header className="nested-graph__header"><p className="network-eyebrow">{network.question}</p><h1>{SELECTION_PROMPTS[depth - 1]}</h1></header>
     <p className="sr-only" aria-live="polite">{SCREEN_RESONANCE[depth - 1]}</p>
     <div className="graph-progress" aria-hidden="true">{[0, 1, 2].map((item) => <i key={item} className={item < path.length ? "is-complete" : ""} />)}</div>
     {path.length > 0 && <button type="button" className="graph-back" onClick={goBack} disabled={locked}>Revenir à la résonance précédente</button>}
@@ -119,6 +135,7 @@ export default function NestedGraphJourney({ journey, onComplete, loading = fals
     </div>
     <div className="graph-accessible-list" aria-label="Résonances disponibles">{nodes.map((node) => <button key={node.id} type="button" onClick={() => selectNode(node)} disabled={locked}>{node.emoji} {node.label}</button>)}</div>
     {error && <p className="graph-message" role="status">{error}</p>}
+    {syncNotice && <p className="graph-sync-notice" role="status">{syncNotice}</p>}
   </section>;
 }
 
@@ -146,8 +163,19 @@ function DreamSeedReveal({ path, seed, phase, journey, network, onComplete }) {
     setSaving(true); setMessage("");
     try {
       if (reflection.trim()) {
-        await saveDreamReflection({ dreamSeedId: seed.id, journeyId: journey.id, content: reflection });
-        trackEvent("dream_reflection_saved", { network_id: network.id, length_bucket: reflection.length > 500 ? "501-1000" : "1-500" });
+        if (seed.isLocal) {
+          trackEvent("dream_reflection_deferred", { network_id: network.id, length_bucket: reflection.length > 500 ? "501-1000" : "1-500" });
+        } else {
+          try {
+            await saveDreamReflection({ dreamSeedId: seed.id, journeyId: journey.id, content: reflection });
+            trackEvent("dream_reflection_saved", { network_id: network.id, length_bucket: reflection.length > 500 ? "501-1000" : "1-500" });
+          } catch (error) {
+            // A private echo is optional. Never trap the player on this page when
+            // its persistence policy or connection is temporarily unavailable.
+            console.warn("Écho distant différé.", error);
+            trackEvent("dream_reflection_deferred", { network_id: network.id, length_bucket: reflection.length > 500 ? "501-1000" : "1-500" });
+          }
+        }
       } else {
         trackEvent("dream_reflection_skipped", { network_id: network.id });
       }
