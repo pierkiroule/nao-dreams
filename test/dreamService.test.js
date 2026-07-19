@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { constellations } from "../src/data/resources.js";
-import { generateDreamBubble } from "../src/services/dreamService.js";
+import { generateDreamScenes } from "../src/services/dreamService.js";
 
 test("every constellation holds exactly twelve surreal emoji records", () => {
   assert.ok(constellations.length >= 3);
@@ -15,9 +15,13 @@ test("every constellation holds exactly twelve surreal emoji records", () => {
   });
 });
 
-test("a trio becomes one short, non-interpretive dream scene", async () => {
-  const dream = await generateDreamBubble({ choices: constellations[0].emojis.slice(0, 3) });
-  assert.match(dream, /🍄.*🦊.*🦉/);
-  assert.ok(dream.split(/\s+/).length < 35);
-  assert.doesNotMatch(dream.toLowerCase(), /tu es|cela signifie|tu devrais|représente/);
+test("a trio becomes three short, non-interpretive exquisite-corpse scenes", () => {
+  const scenes = generateDreamScenes({ choices: constellations[0].emojis.slice(0, 3) });
+  assert.equal(scenes.length, 3);
+  assert.equal(new Set(scenes).size, 3);
+  scenes.forEach((scene) => {
+    assert.match(scene, /🍄.*🦊.*🦉/);
+    assert.ok(scene.split(/\s+/).length < 35);
+    assert.doesNotMatch(scene.toLowerCase(), /tu es|cela signifie|tu devrais|représente/);
+  });
 });

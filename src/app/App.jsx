@@ -2,9 +2,11 @@ import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "r
 import Layout from "../components/Layout";
 import Home from "../pages/Home";
 import Launch from "../pages/Launch";
+import Scenes from "../pages/Scenes";
 import Reveal from "../pages/Reveal";
+import PassDream from "../pages/PassDream";
 import Account from "../pages/Account";
-import { generateDreamBubble } from "../services/dreamService";
+import { generateDreamScenes } from "../services/dreamService";
 import { syncJourney } from "../services/syncService";
 import { initializeAnonymousPlayer } from "../services/anonymousPlayer";
 import {
@@ -20,7 +22,9 @@ import { APP_CONFIG } from "../config/app";
 const PAGE_COMPONENTS = {
   [STEPS.HOME]: Home,
   [STEPS.CHOOSE]: Launch,
+  [STEPS.SCENES]: Scenes,
   [STEPS.REVEAL]: Reveal,
+  [STEPS.PASS]: PassDream,
   [STEPS.ACCOUNT]: Account,
 };
 
@@ -89,16 +93,30 @@ export default function App() {
         });
       },
 
-      async reveal(selections) {
-        const dream = await generateDreamBubble(selections);
+      showScenes(selections) {
+        const scenes = generateDreamScenes(selections);
         dispatch({
-          type: EVENTS.REVEAL_DREAM,
+          type: EVENTS.SHOW_SCENES,
           payload: {
             selections,
-            dream,
+            scenes,
           },
         });
-        trackEvent("dream_revealed", { constellation: selections.networkId, emoji_ids: selections.bubbleIds });
+        trackEvent("dream_scenes_offered", { constellation: selections.networkId, emoji_ids: selections.bubbleIds });
+      },
+
+      reveal(dream, constellation) {
+        dispatch({ type: EVENTS.REVEAL_DREAM, payload: { dream } });
+        trackEvent("dream_revealed", { constellation });
+      },
+
+      openPass() {
+        dispatch({ type: EVENTS.OPEN_PASS });
+      },
+
+      passDream(passer) {
+        dispatch({ type: EVENTS.PASS_DREAM, payload: { passer } });
+        trackEvent("dream_passed", { passer_id: passer.id, cycle_position: passer.position });
       },
 
       restart() {

@@ -5,7 +5,6 @@ import { constellations, getConstellation } from "../data/resources";
 export default function Launch({ actions }) {
   const [constellationId, setConstellationId] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
-  const [loading, setLoading] = useState(false);
   const constellation = useMemo(() => getConstellation(constellationId), [constellationId]);
 
   function selectConstellation(id) {
@@ -19,15 +18,10 @@ export default function Launch({ actions }) {
       : current.length === 3 ? current : [...current, id]);
   }
 
-  async function reveal() {
-    if (!constellation || selectedIds.length !== 3 || loading) return;
-    setLoading(true);
+  function reveal() {
+    if (!constellation || selectedIds.length !== 3) return;
     const choices = constellation.emojis.filter(({ id }) => selectedIds.includes(id));
-    try {
-      await actions.reveal({ networkId: constellation.id, bubbleIds: selectedIds, choices });
-    } finally {
-      setLoading(false);
-    }
+    actions.showScenes({ networkId: constellation.id, bubbleIds: selectedIds, choices });
   }
 
   return (
@@ -49,7 +43,7 @@ export default function Launch({ actions }) {
         </div>
       </div>}
 
-      {constellation && <Button onClick={reveal} disabled={selectedIds.length !== 3 || loading}>{loading ? "Le rêve arrive…" : "Ouvrir le rêve"}</Button>}
+      {constellation && <Button onClick={reveal} disabled={selectedIds.length !== 3}>Voir trois scènes</Button>}
     </section>
   );
 }
