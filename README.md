@@ -2,13 +2,14 @@
 
 ## Supabase
 
-The app synchronizes a started journey to Supabase after every state change. Local
-storage remains the source used to restore an in-progress journey if the visitor is
-offline or Supabase is not configured.
+The app creates a profile from the pseudonym entered on the home page, then saves
+its started journeys in the existing `public.journeys` table. Local storage remains
+the source used to restore an in-progress journey if the visitor is offline.
 
-1. Run both SQL files in `supabase/migrations/` in the Supabase SQL editor (or
-   through your Supabase migration workflow). The profiles migration creates the
-   pseudonym account used from the home page.
+1. Apply the account migrations, in order, in the Supabase SQL editor (or through
+   your Supabase migration workflow):
+   - `supabase/migrations/20260718010000_create_profiles.sql`
+   - `supabase/migrations/20260719000000_link_profiles_to_journeys.sql`
 2. In Vercel, add the following environment variables to the required environments:
    - `VITE_SUPABASE_URL`: `https://lzkuwiutppzxmglsvvol.supabase.co`
    - `VITE_SUPABASE_PUBLISHABLE_KEY`: the project's publishable key (the legacy

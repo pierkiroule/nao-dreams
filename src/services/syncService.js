@@ -1,23 +1,19 @@
 import { getSupabaseClient, isSupabaseConnected } from "../api/supabase";
 import { JOURNEY_STATUS } from "../config/constants";
 
-const TABLE_NAME = "dream_journeys";
+const TABLE_NAME = "journeys";
 
-function toJourneyRecord(journey) {
+function toJourneyRecord(journey, profile) {
   return {
-    journey_id: journey.id,
-    nao_id: journey.naoId,
-    series_id: journey.seriesId,
-    selections: journey.selections,
-    dream: journey.dream,
-    status: journey.status,
-    received_at: journey.receivedAt,
-    created_at: journey.createdAt,
-    passed_at: journey.passedAt,
+    id: journey.id,
+    locale: "fr",
+    completed: journey.status === JOURNEY_STATUS.PASSED,
+    profile_id: profile?.id ?? null,
+    created_at: journey.receivedAt,
   };
 }
 
-export async function syncJourney(journey) {
+export async function syncJourney(journey, profile) {
   if (!journey?.id || journey.status === JOURNEY_STATUS.IDLE) {
     return { synced: false, reason: "journey_not_started" };
   }
@@ -28,7 +24,7 @@ export async function syncJourney(journey) {
 
   const { error } = await getSupabaseClient()
     .from(TABLE_NAME)
-    .upsert(toJourneyRecord(journey), { onConflict: "journey_id" });
+    .upsert(toJourneyRecord(journey, profile), { onConflict: "id" });
 
   if (error) {
     throw error;
