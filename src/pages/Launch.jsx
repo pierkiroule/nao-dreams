@@ -1,6 +1,5 @@
 import { useState } from "react";
 import DreamConstellation from "../components/DreamConstellation";
-import { DREAM_CONFIG } from "../config/dream";
 import { dreamResources } from "../data/resources";
 
 export default function Launch({
@@ -11,8 +10,7 @@ export default function Launch({
 
   async function handleLaunch(selections) {
     if (
-      selections.symbols.length !== DREAM_CONFIG.selectionCount ||
-      !selections.sensation ||
+      selections.symbols.length !== 3 ||
       loading
     ) {
       return;
@@ -35,8 +33,7 @@ export default function Launch({
   return (
     <section className="page dream-launch-page">
       <DreamConstellation
-        symbols={dreamResources.symbols}
-        sensations={dreamResources.sensations}
+        network={dreamResources.network}
         initialSelections={journey.selections ?? {}}
         onContinue={handleLaunch}
         loading={loading}

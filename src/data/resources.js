@@ -1,28 +1,38 @@
+const sensoryNeeds = [
+  { id: "ocean", label: "Océan", emoji: "🌊" },
+  { id: "forest", label: "Forêt", emoji: "🌲" },
+  { id: "moon", label: "Lune", emoji: "🌙" },
+  { id: "fire", label: "Feu", emoji: "🔥" },
+  { id: "garden", label: "Jardin", emoji: "🌷" },
+  { id: "bird", label: "Oiseau", emoji: "🕊️" },
+];
+
+const secondLevel = [
+  ["calm", "Calme", "🫧"], ["shelter", "Refuge", "🏠"], ["wonder", "Émerveillement", "✨"],
+  ["tenderness", "Tendresse", "💗"], ["freedom", "Liberté", "🪶"], ["courage", "Courage", "🦁"],
+];
+
+const thirdLevel = [
+  ["mist", "Brume", "🌫️"], ["whale", "Baleine", "🐋"], ["lantern", "Lanterne", "🏮"],
+  ["feather", "Plume", "🪶"], ["key", "Clé", "🗝️"], ["butterfly", "Papillon", "🦋"],
+];
+
+function makeChildren(values) {
+  return values.map(([id, label, emoji]) => ({
+    id,
+    label,
+    emoji,
+    children: thirdLevel.map(([leafId, leafLabel, leafEmoji]) => ({
+      id: leafId,
+      label: leafLabel,
+      emoji: leafEmoji,
+    })),
+  }));
+}
+
 export const dreamResources = {
-  symbols: [
-    { id: "ocean", label: "Océan", emoji: "🌊" },
-    { id: "forest", label: "Forêt", emoji: "🌲" },
-    { id: "desert", label: "Désert", emoji: "🏜️" },
-    { id: "mountain", label: "Montagne", emoji: "⛰️" },
-    { id: "whale", label: "Baleine", emoji: "🐋" },
-    { id: "fox", label: "Renard", emoji: "🦊" },
-    { id: "owl", label: "Chouette", emoji: "🦉" },
-    { id: "butterfly", label: "Papillon", emoji: "🦋" },
-    { id: "key", label: "Clé", emoji: "🗝️" },
-    { id: "feather", label: "Plume", emoji: "🪶" },
-    { id: "lantern", label: "Lanterne", emoji: "🏮" },
-    { id: "mirror", label: "Miroir", emoji: "🪞" },
-    { id: "mist", label: "Brume", emoji: "🌫️" },
-    { id: "moonlight", label: "Clair de lune", emoji: "🌙" },
-    { id: "warm-rain", label: "Pluie chaude", emoji: "🌧️" },
-    { id: "silence", label: "Silence", emoji: "✨" },
-  ],
-  sensations: [
-    { id: "joy", label: "Joie", emoji: "☀️" },
-    { id: "calm", label: "Calme", emoji: "🫧" },
-    { id: "wonder", label: "Émerveillement", emoji: "✨" },
-    { id: "tenderness", label: "Tendresse", emoji: "💗" },
-    { id: "courage", label: "Courage", emoji: "🔥" },
-    { id: "freedom", label: "Liberté", emoji: "🕊️" },
-  ],
+  network: sensoryNeeds.map((need) => ({
+    ...need,
+    children: makeChildren(secondLevel),
+  })),
 };

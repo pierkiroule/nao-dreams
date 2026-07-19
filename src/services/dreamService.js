@@ -20,6 +20,16 @@ const labels = {
   moonlight: "sous un clair de lune",
   "warm-rain": "sous une pluie chaude",
   silence: "dans un silence profond",
+  calm: "un calme profond",
+  shelter: "un refuge doux",
+  wonder: "un éclat d’émerveillement",
+  tenderness: "une tendresse lumineuse",
+  freedom: "un souffle de liberté",
+  courage: "un courage tranquille",
+  moon: "un clair de lune",
+  fire: "un feu paisible",
+  garden: "un jardin secret",
+  bird: "un oiseau migrateur",
 };
 
 function wait(duration) {
