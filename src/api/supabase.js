@@ -7,20 +7,26 @@ function createSupabaseError(response, details) {
   const message = details?.message ?? `Supabase request failed (${response.status}).`;
   return Object.assign(new Error(message), {
     code: details?.code,
+    details: details?.details,
+    hint: details?.hint,
     status: response.status,
   });
 }
 
-async function request(url, key, body, prefer) {
+async function request(
+  url,
+  key,
+  { method = "POST", body, prefer, accessToken } = {},
+) {
   const response = await fetch(url, {
-    method: "POST",
+    method,
     headers: {
       apikey: key,
-      Authorization: `Bearer ${key}`,
+      Authorization: `Bearer ${accessToken ?? key}`,
       "Content-Type": "application/json",
       ...(prefer ? { Prefer: prefer } : {}),
     },
-    body: JSON.stringify(body),
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
   });
 
   let data = null;
@@ -40,12 +46,35 @@ async function request(url, key, body, prefer) {
 }
 
 function createClient(url, key) {
+  let accessToken = null;
+
   return {
     auth: {
       async signInAnonymously() {
-        const result = await request(`${url}/auth/v1/signup`, key, {}, null);
+        const result = await request(`${url}/auth/v1/signup`, key, {
+          body: {},
+        });
+        accessToken = result.data?.access_token ?? null;
+
         return {
-          data: result.data ? { user: result.data.user } : null,
+          data: result.data
+            ? { user: result.data.user, session: result.data }
+            : null,
+          error: result.error,
+        };
+      },
+
+      async getUser() {
+        if (!accessToken) {
+          return { data: { user: null }, error: null };
+        }
+
+        const result = await request(`${url}/auth/v1/user`, key, {
+          method: "GET",
+          accessToken,
+        });
+        return {
+          data: { user: result.data },
           error: result.error,
         };
       },
@@ -56,19 +85,25 @@ function createClient(url, key) {
 
       return {
         insert(record) {
-          return request(endpoint, key, record, "return=minimal");
+          return request(endpoint, key, {
+            body: record,
+            prefer: "return=minimal",
+            accessToken,
+          });
         },
 
-        upsert(record, { onConflict } = {}) {
+        upsert(record, { onConflict, returnRepresentation = false } = {}) {
           const query = onConflict
             ? `?on_conflict=${encodeURIComponent(onConflict)}`
             : "";
-          return request(
-            `${endpoint}${query}`,
-            key,
-            record,
-            "resolution=merge-duplicates,return=minimal",
-          );
+          const returning = returnRepresentation
+            ? "return=representation"
+            : "return=minimal";
+          return request(`${endpoint}${query}`, key, {
+            body: record,
+            prefer: `resolution=merge-duplicates,${returning}`,
+            accessToken,
+          });
         },
       };
     },

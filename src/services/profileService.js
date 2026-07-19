@@ -32,17 +32,37 @@ function profileErrorMessage(error) {
   return error.message || "Impossible de créer le compte.";
 }
 
+function logProfileError(error) {
+  console.error("[NAO profile] PROFILE ERROR", {
+    message: error.message,
+    code: error.code,
+    details: error.details,
+    hint: error.hint,
+    status: error.status,
+  });
+}
+
 export async function createProfile(pseudonym) {
   if (!isSupabaseConnected()) {
     throw new Error("La connexion à Supabase n'est pas configurée.");
   }
 
   const client = getSupabaseClient();
-  const { data: authData, error: authError } =
-    await client.auth.signInAnonymously();
+  const { error: authError } = await client.auth.signInAnonymously();
 
-  if (authError || !authData?.user?.id) {
-    throw new Error(profileErrorMessage(authError ?? new Error()));
+  if (authError) {
+    logProfileError(authError);
+    throw new Error(profileErrorMessage(authError));
+  }
+
+  const { data: authData, error: getUserError } = await client.auth.getUser();
+  console.debug("[NAO profile] USER:", authData?.user);
+
+  if (getUserError || !authData?.user?.id) {
+    if (getUserError) {
+      logProfileError(getUserError);
+    }
+    throw new Error("Aucune session Supabase active.");
   }
 
   const profile = {
@@ -50,15 +70,23 @@ export async function createProfile(pseudonym) {
     pseudonym: normalizePseudonym(pseudonym),
     createdAt: new Date().toISOString(),
   };
-  const { error } = await client
+  const payload = {
+    id: profile.id,
+    username: profile.pseudonym,
+    display_name: profile.pseudonym,
+  };
+  console.debug("[NAO profile] PROFILE PAYLOAD:", payload);
+
+  const { data, error } = await client
     .from(TABLE_NAME)
-    .insert({
-      id: profile.id,
-      username: profile.pseudonym,
-      display_name: profile.pseudonym,
+    .upsert(payload, {
+      onConflict: "id",
+      returnRepresentation: true,
     });
 
+  console.debug("[NAO profile] PROFILE DATA:", data);
   if (error) {
+    logProfileError(error);
     throw new Error(profileErrorMessage(error));
   }
 
