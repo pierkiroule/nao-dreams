@@ -119,6 +119,19 @@ function createClient(url, key) {
           };
         },
 
+        delete() {
+          return {
+            eq(column, value) {
+              const query = `?${encodeURIComponent(column)}=eq.${encodeURIComponent(value)}`;
+              return request(`${endpoint}${query}`, key, {
+                method: "DELETE",
+                prefer: "return=minimal",
+                accessToken: session?.access_token,
+              });
+            },
+          };
+        },
+
         select(columns = "*") {
           const query = new URLSearchParams({ select: columns });
           const run = () => request(`${endpoint}?${query}`, key, {

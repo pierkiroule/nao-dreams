@@ -70,3 +70,39 @@ export async function syncJourney(journey) {
 
   return { synced: true };
 }
+
+export async function createOrResumeJourney(journey, networkId) {
+  if (!isSupabaseConnected()) return journey.id;
+  const client = getSupabaseClient();
+  const { data, error } = await client.auth.getUser();
+  if (error) throw error;
+  if (!data?.user?.id) throw new Error("Aucune session Supabase active.");
+  const { error: saveError } = await client.from(TABLE_NAME).upsert({
+    ...toJourneyRecord({ ...journey, networkId }, data.user.id),
+    network_id: networkId,
+  }, { onConflict: "id" });
+  if (saveError) throw saveError;
+  return journey.id;
+}
+
+export async function replaceJourneyChoice(journeyId, choices) {
+  if (!isSupabaseConnected()) return;
+  const client = getSupabaseClient();
+  const { error: deleteError } = await client.from("journey_choices").delete().eq("journey_id", journeyId);
+  if (deleteError) throw deleteError;
+  if (!choices.length) return;
+  const { error } = await client.from("journey_choices").insert(choices.map((choice, index) => ({
+    journey_id: journeyId,
+    bubble_id: choice.bubbleId,
+    step: index + 1,
+  })));
+  if (error) throw error;
+}
+
+export async function saveJourneyChoice(journeyId, choices) {
+  return replaceJourneyChoice(journeyId, choices);
+}
+
+export async function completeJourney(journey) {
+  return syncJourney(journey);
+}
