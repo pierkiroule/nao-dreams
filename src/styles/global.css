@@ -2435,6 +2435,36 @@ button:focus-visible,
   box-shadow: 0 0 0 3px rgba(138, 165, 255, 0.16);
 }
 
+.profile-form .text-button {
+  min-height: auto;
+  padding: 4px;
+  border: 0;
+  color: var(--blue-300);
+  background: transparent;
+  box-shadow: none;
+  font-size: 0.9rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.profile-form .text-button:hover:not(:disabled) {
+  color: var(--moon);
+  transform: none;
+}
+
+.dream-pseudonym {
+  margin: 4px 0;
+  color: var(--moon);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.35rem, 5vw, 1.75rem);
+}
+
+.location-label {
+  margin: 0;
+  color: var(--mist);
+  font-size: 0.9rem;
+}
+
 .eyebrow {
   margin: 0;
   color: var(--blue-300);
