@@ -80,7 +80,14 @@ export default function NestedGraphJourney({ journey, onComplete, loading = fals
               const seed = await createOrResumeDreamSeed({ journeyId: journey.id, networkId: network.id, bubbleIds: nextPath.map((item) => item.bubbleId) });
               setDreamSeed(seed); setFinalPhase("collecting_reflection");
               trackEvent("dream_seed_revealed", { network_id: network.id, generation_mode: seed.generationMode, reduced_motion: reducedMotion });
-            } catch { setError("La bulle n’a pas pu émerger pour le moment."); setFinalPhase("revealing_trio"); trackEvent("dream_seed_failed", { network_id: network.id }); }
+            } catch {
+              // This is a last-resort guard for unexpected client failures. Keep
+              // the journey actionable instead of showing the loading copy forever.
+              const phrase = "Une lumière douce relie ces trois signes, comme une porte entrouverte sur l’océan.";
+              setDreamSeed({ id: crypto.randomUUID(), journeyId: journey.id, networkId: network.id, bubbleIds: nextPath.map((item) => item.bubbleId), phrase, generationMode: "fallback" });
+              setFinalPhase("collecting_reflection");
+              trackEvent("dream_seed_failed", { network_id: network.id });
+            }
           }, reducedMotion ? 180 : 700));
           return;
         }
