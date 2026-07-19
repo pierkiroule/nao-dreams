@@ -56,7 +56,9 @@ export default function NestedGraphJourney({ journey, onComplete, loading = fals
     const nextPath = [...path, chosen];
     setSelected(node.id); setError(""); setPhase(TRANSITION_STATES.FOCUSING);
     trackEvent("graph_node_selected", { network_id: network.id, bubble_id: node.id, depth, reduced_motion: reducedMotion });
-    try { await replaceJourneyChoice(journey.id, nextPath); } catch { setError("Le choix reste dans ce rêve, mais sa sauvegarde sera réessayée."); }
+    replaceJourneyChoice(journey.id, nextPath).catch(() => {
+      setError("Le choix reste dans ce rêve, mais sa sauvegarde sera réessayée.");
+    });
     const focus = reducedMotion ? 130 : TRANSITION_DURATIONS.focusing;
     timers.current.push(window.setTimeout(async () => {
       setPhase(TRANSITION_STATES.ENTERING);
@@ -93,7 +95,9 @@ export default function NestedGraphJourney({ journey, onComplete, loading = fals
     setPhase(TRANSITION_STATES.ENTERING); setError("");
     try {
       const previousNodes = previousPath.length ? await getChildNodes(network.id, previousPath.at(-1).bubbleId) : await getRootNodes(network.id);
-      await replaceJourneyChoice(journey.id, previousPath);
+      replaceJourneyChoice(journey.id, previousPath).catch(() => {
+        setError("Le retour est visible, mais sa sauvegarde sera réessayée.");
+      });
       setPath(previousPath); setNodes(previousNodes); setEdges(await getNetworkEdges(network.id, previousNodes.map((node) => node.id))); setPhase(TRANSITION_STATES.REVEALING);
       trackEvent("graph_depth_returned", { network_id: network.id, depth: path.length });
       timers.current.push(window.setTimeout(() => setPhase(TRANSITION_STATES.IDLE), reducedMotion ? 160 : TRANSITION_DURATIONS.revealing));

@@ -2,6 +2,7 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey =
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
   import.meta.env.VITE_SUPABASE_ANON_KEY;
+const REQUEST_TIMEOUT_MS = 8_000;
 
 function createSupabaseError(response, details) {
   const message = details?.message ?? `Supabase request failed (${response.status}).`;
@@ -14,16 +15,25 @@ function createSupabaseError(response, details) {
 }
 
 async function request(url, key, { method = "POST", body, prefer, accessToken } = {}) {
-  const response = await fetch(url, {
-    method,
-    headers: {
-      apikey: key,
-      Authorization: `Bearer ${accessToken ?? key}`,
-      "Content-Type": "application/json",
-      ...(prefer ? { Prefer: prefer } : {}),
-    },
-    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  let response;
+
+  try {
+    response = await fetch(url, {
+      method,
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${accessToken ?? key}`,
+        "Content-Type": "application/json",
+        ...(prefer ? { Prefer: prefer } : {}),
+      },
+      signal: controller.signal,
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
 
   let data = null;
   if (response.status !== 204) {
