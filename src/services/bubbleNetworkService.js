@@ -25,13 +25,21 @@ function localChildren(parentId) {
 
 export async function getPublishedNetwork() {
   if (!isSupabaseConnected()) return { ...dreamResources.network, isLocal: true };
-  const client = getSupabaseClient();
-  const { data, error } = await client.from("bubble_networks")
-    .select("id,question,max_depth").eq("status", "published")
-    .order("created_at", { ascending: false }).limit(1);
-  if (error) throw error;
-  if (!data?.[0]) throw new Error("Aucun réseau de bulles publié n’est disponible.");
-  return { id: data[0].id, question: data[0].question, maxDepth: data[0].max_depth, isLocal: false };
+  try {
+    const client = getSupabaseClient();
+    const { data, error } = await client.from("bubble_networks")
+      .select("id,question,max_depth").eq("status", "published")
+      .order("created_at", { ascending: false }).limit(1);
+    if (error) throw error;
+    if (!data?.[0]) throw new Error("Aucun réseau de bulles publié n’est disponible.");
+    return { id: data[0].id, question: data[0].question, maxDepth: data[0].max_depth, isLocal: false };
+  } catch (error) {
+    // A configured Supabase project can legitimately have no published graph yet.
+    // Never block the launch experience in that state: the embedded network is a
+    // complete, six-node-per-level fallback and preserves the same journey flow.
+    console.warn("Réseau distant indisponible, utilisation du réseau embarqué.", error);
+    return { ...dreamResources.network, isLocal: true };
+  }
 }
 
 async function fetchBubbles(client, references) {

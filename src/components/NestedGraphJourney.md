@@ -10,6 +10,11 @@ nécessaires. Les statistiques sont optionnelles : `resonanceScore` et
 `cooccurrenceCount` produisent respectivement une variation de taille et de lien
 bornée, ou un rendu neutre lorsqu’elles sont absentes.
 
+Lorsqu’un projet Supabase est configuré mais qu’aucun réseau n’est encore publié
+(ou que la lecture est temporairement indisponible), le réseau embarqué complet est
+utilisé automatiquement. L’utilisateur peut donc toujours démarrer son parcours;
+l’incident distant est conservé dans la console pour l’exploitation.
+
 Le rendu CSS avec perspective est le fallback universel et reste entièrement
 accessible : les six contrôles DOM sont les cibles clavier/tactiles. Three.js et
 React Three Fiber n’ont pas pu être ajoutés dans cet environnement car le registre
