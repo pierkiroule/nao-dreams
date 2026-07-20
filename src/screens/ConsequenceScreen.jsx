@@ -1,0 +1,3 @@
+import { useState } from "react";
+import Button from "../components/Button";
+export default function ConsequenceScreen({ emoji, consequence, onContinue }) { const [echo,setEcho]=useState(""); return <section className="page consequence-screen"><div className="consequence-symbol">{emoji.symbol}</div><p className="eyebrow">Le rêve répond</p><h2 className="page-title">{consequence}</h2><label className="echo-field" htmlFor="dream-echo">Ce fragment te fait penser à quoi ? <span>facultatif · un mot, un emoji, ou rien</span><input id="dream-echo" maxLength="80" value={echo} onChange={(event)=>setEcho(event.target.value)} placeholder="refuge"/></label><Button onClick={()=>onContinue(echo)}>Garder cet écho</Button></section>; }

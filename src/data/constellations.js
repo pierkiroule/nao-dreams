@@ -12,3 +12,4 @@ export const constellations = [
 ];
 
 export function selectConstellation(contributionCount) { return constellations[contributionCount % constellations.length]; }
+export function getConstellation(id) { return constellations.find((constellation) => constellation.id === id); }

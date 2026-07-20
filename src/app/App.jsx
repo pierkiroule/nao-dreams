@@ -2,42 +2,20 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Layout from "../components/Layout";
 import InvitationScreen from "../screens/InvitationScreen";
 import ConstellationScreen from "../screens/ConstellationScreen";
-import IntegrationScreen from "../screens/IntegrationScreen";
+import ConsequenceScreen from "../screens/ConsequenceScreen";
+import DirectionScreen from "../screens/DirectionScreen";
 import TransmissionScreen from "../screens/TransmissionScreen";
 import ProgressScreen from "../screens/ProgressScreen";
 import RevealScreen from "../screens/RevealScreen";
-import { selectConstellation } from "../data/constellations";
+import { getConstellation, selectConstellation } from "../data/constellations";
 import { LocalDreamRepository } from "../services/localDreamRepository";
 import { USE_LOCAL_DEMO } from "../services/dreamRepository";
+import { getDreamEffect, nextScene } from "../utils/dreamScene";
 import { generateLocalDream } from "../utils/generateLocalDream";
 import { trackEvent } from "../api/analytics";
-
-const SCREENS = { INVITATION: "invitation", CONSTELLATION: "constellation", INTEGRATION: "integration", TRANSMISSION: "transmission", PROGRESS: "progress", REVEAL: "reveal" };
-
-export default function App() {
-  const [screen, setScreen] = useState(SCREENS.INVITATION);
-  const [journey, setJourney] = useState(null);
-  const [contributions, setContributions] = useState([]);
-  const [selected, setSelected] = useState(null);
-
-  const loadJourney = useCallback(async () => {
-    if (!USE_LOCAL_DEMO) return;
-    const [nextJourney, nextContributions] = await Promise.all([LocalDreamRepository.getJourney(), LocalDreamRepository.getContributions()]);
-    setJourney(nextJourney); setContributions(nextContributions);
-  }, []);
-  useEffect(() => { loadJourney(); }, [loadJourney]);
-
-  const constellation = useMemo(() => selectConstellation(journey?.contributionCount ?? 0), [journey?.contributionCount]);
-  const enter = useCallback(() => { setScreen(SCREENS.CONSTELLATION); trackEvent("dream_entered"); }, []);
-  const confirm = useCallback(async () => {
-    if (!selected || !journey) return;
-    const contribution = { id: crypto.randomUUID(), journeyId: journey.id, constellationId: constellation.id, emoji: selected.symbol, label: selected.label, position: journey.contributionCount, createdAt: new Date().toISOString() };
-    await LocalDreamRepository.addContribution(contribution); setContributions((current) => [...current, contribution]); setJourney((current) => ({ ...current, contributionCount: current.contributionCount + 1, status: current.contributionCount + 1 >= current.revealThreshold ? "ready" : "active" })); setScreen(SCREENS.INTEGRATION); trackEvent("dream_fragment_added", { constellation: constellation.id });
-  }, [constellation.id, journey, selected]);
-  const showProgress = useCallback(() => setScreen(SCREENS.PROGRESS), []);
-  const reset = useCallback(async () => { const next = await LocalDreamRepository.reset(); setJourney(next); setContributions(await LocalDreamRepository.getContributions()); setSelected(null); setScreen(SCREENS.INVITATION); }, []);
-  const shareDream = useCallback(async () => { const data = { title: "NOA DREAMS", text: "The dream is ready.", url: window.location.href }; if (navigator.share) await navigator.share(data); else await navigator.clipboard?.writeText(data.url); }, []);
-  const dream = useMemo(() => generateLocalDream(contributions), [contributions]);
-  if (!journey) return <Layout><p className="small-text">Le rêve se réveille…</p></Layout>;
-  return <Layout>{screen === SCREENS.INVITATION && <InvitationScreen onEnter={enter}/>} {screen === SCREENS.CONSTELLATION && <ConstellationScreen constellation={constellation} selected={selected} onSelect={setSelected} onConfirm={confirm}/>} {screen === SCREENS.INTEGRATION && <IntegrationScreen emoji={selected} onDone={() => setScreen(SCREENS.TRANSMISSION)}/>} {screen === SCREENS.TRANSMISSION && <TransmissionScreen onLater={showProgress}/>} {screen === SCREENS.PROGRESS && <ProgressScreen journey={journey} onReveal={() => setScreen(SCREENS.REVEAL)} onQuit={() => setScreen(SCREENS.INVITATION)} onReset={reset}/>} {screen === SCREENS.REVEAL && <RevealScreen dream={dream} onShare={shareDream} onQuit={() => setScreen(SCREENS.INVITATION)}/>}</Layout>;
-}
+const SCREENS={INVITATION:"invitation",CONSTELLATION:"constellation",CONSEQUENCE:"consequence",DIRECTION:"direction",TRANSMISSION:"transmission",PROGRESS:"progress",REVEAL:"reveal"};
+export default function App(){ const [screen,setScreen]=useState(SCREENS.INVITATION);const [journey,setJourney]=useState(null);const [contributions,setContributions]=useState([]);const [selected,setSelected]=useState(null);const [currentContribution,setCurrentContribution]=useState(null);
+ const load=useCallback(async()=>{if(!USE_LOCAL_DEMO)return;const [nextJourney,nextContributions]=await Promise.all([LocalDreamRepository.getJourney(),LocalDreamRepository.getContributions()]);setJourney(nextJourney);setContributions(nextContributions);},[]);useEffect(()=>{load();},[load]);
+ const constellation=useMemo(()=>getConstellation(journey?.nextConstellationId)||selectConstellation(journey?.contributionCount??0),[journey?.contributionCount,journey?.nextConstellationId]);const preview=selected?getDreamEffect(selected)[0]:"";
+ const confirm=useCallback(async()=>{if(!selected||!journey)return;const effect=getDreamEffect(selected);const contribution={id:crypto.randomUUID(),journeyId:journey.id,constellationId:constellation.id,emoji:selected.symbol,label:selected.label,position:journey.contributionCount,createdAt:new Date().toISOString(),consequence:effect[1]};const updated=await LocalDreamRepository.addContribution(contribution,nextScene(effect[1]));setContributions((value)=>[...value,contribution]);setJourney(updated);setCurrentContribution(contribution);setScreen(SCREENS.CONSEQUENCE);trackEvent("dream_fragment_added",{constellation:constellation.id});},[constellation.id,journey,selected]);
+ const saveEcho=useCallback((echo)=>{setCurrentContribution((value)=>({...value,echo}));setScreen(SCREENS.DIRECTION);},[]);const direction=useCallback(async(id)=>{const updated=await LocalDreamRepository.enrichContribution(currentContribution.id,currentContribution.echo,id);setJourney(updated);setScreen(SCREENS.TRANSMISSION);},[currentContribution]);const reset=useCallback(async()=>{const next=await LocalDreamRepository.reset();setJourney(next);setContributions(await LocalDreamRepository.getContributions());setSelected(null);setScreen(SCREENS.INVITATION);},[]);const share=useCallback(async()=>{const data={title:"NOA DREAMS",text:"J’ai ajouté quelque chose au rêve. À toi de découvrir quoi.",url:window.location.href};if(navigator.share)await navigator.share(data);else await navigator.clipboard?.writeText(data.url);},[]);const dream=useMemo(()=>generateLocalDream(contributions),[contributions]);if(!journey)return <Layout><p className="small-text">Le rêve se réveille…</p></Layout>;return <Layout>{screen===SCREENS.INVITATION&&<InvitationScreen scene={journey.currentScene} onEnter={()=>setScreen(SCREENS.CONSTELLATION)}/>} {screen===SCREENS.CONSTELLATION&&<ConstellationScreen constellation={constellation} selected={selected} preview={preview} onSelect={setSelected} onConfirm={confirm}/>} {screen===SCREENS.CONSEQUENCE&&<ConsequenceScreen emoji={selected} consequence={currentContribution.consequence} onContinue={saveEcho}/>} {screen===SCREENS.DIRECTION&&<DirectionScreen onChoose={direction}/>} {screen===SCREENS.TRANSMISSION&&<TransmissionScreen onLater={()=>setScreen(SCREENS.INVITATION)} onProgress={()=>setScreen(SCREENS.PROGRESS)}/>} {screen===SCREENS.PROGRESS&&<ProgressScreen journey={journey} onReveal={()=>setScreen(SCREENS.REVEAL)} onQuit={()=>setScreen(SCREENS.INVITATION)} onReset={reset}/>} {screen===SCREENS.REVEAL&&<RevealScreen dream={dream} onShare={share} onQuit={()=>setScreen(SCREENS.INVITATION)}/>}</Layout>; }
