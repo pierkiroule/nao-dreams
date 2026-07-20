@@ -1,18 +1,38 @@
-function join(items) {
-  return items.length === 2 ? items.join(" et ") : `${items.slice(0, -1).join(", ")} et ${items.at(-1)}`;
+import { events, impossibleActions, objects, places, transformations, witnesses } from "../data/dreamLexicon.js";
+
+export const FORBIDDEN_TERMS = ["tu es", "cela signifie", "tu devrais", "ton inconscient", "ce symbole représente", "ce rêve révèle", "apprends à", "invite à"];
+
+function seededRandom(seed) {
+  let value = 0;
+  for (const character of String(seed)) value = (value * 31 + character.charCodeAt(0)) >>> 0;
+  return () => ((value = (value * 1664525 + 1013904223) >>> 0) / 4294967296);
 }
 
-export function generateDreamScenes(selections) {
-  const choices = selections.choices ?? [];
-  const [first, second, third] = choices;
-  const firstAssociations = first?.associations ?? ["une porte sans mur", "un tapis qui flotte"];
-  const secondAssociations = second?.associations ?? ["un nuage plié", "un plafond de sable"];
-  const thirdAssociations = third?.associations ?? ["une tasse qui écoute", "une ombre en papier"];
-  const subject = join(choices.map((choice) => choice.emoji));
+function pick(items, random) { return items[Math.floor(random() * items.length)]; }
 
-  return [
-    `${subject} traversaient la pièce sur ${firstAssociations[0]}. Au plafond, ${secondAssociations[0]} apprenait à nager pendant que ${thirdAssociations[0]} comptait les ombres.`,
-    `Dans un ascenseur de brume, ${thirdAssociations[1]} portait ${subject}. ${firstAssociations[1]} ouvrait ses yeux au son de ${secondAssociations[1]}.`,
-    `${secondAssociations[0]} servait le thé à ${subject}. Derrière la fenêtre, ${firstAssociations[1]} devenait lentement ${thirdAssociations[0]}.`,
-  ];
+const templates = [
+  ({ chosen, action, place, event }) => `Dans ${place}, ${chosen} ${action}, jusqu'à ce que ${event}.`,
+  ({ chosen, witness, object, transformation }) => `${witness} demanda à ${chosen} de garder ${object}, mais ${chosen} devint ${transformation}.`,
+  ({ chosen, subject, action, place }) => `Cette nuit-là, ${place} se trouvait à l'intérieur de ${chosen}. ${subject} y ${action}.`,
+  ({ chosen, witness, object, event }) => `${chosen} gardait ${object} pendant que ${witness} comptait les silences. Puis ${event}.`,
+  ({ chosen, subject, action, transformation }) => `Chaque fois que ${chosen} ${action}, ${subject} devenait ${transformation}.`,
+  ({ chosen, place, object, event }) => `Personne ne remarqua que ${chosen} avait remplacé ${object} dans ${place}. Alors ${event}.`,
+  ({ chosen, witness, action, place }) => `Sous ${chosen}, ${witness} ${action} dans ${place}.`,
+  ({ chosen, subject, transformation, event }) => `${subject} suivait ${chosen} comme une porte. Au bout du couloir, ${chosen} était ${transformation} et ${event}.`,
+  ({ chosen, object, action, witness }) => `${chosen} ${action} avec ${object}; ${witness} fit semblant de ne rien voir.`,
+  ({ chosen, place, transformation, event }) => `Au réveil, ${place} avait la forme de ${chosen}. ${chosen} portait ${transformation}, et ${event}.`,
+  ({ chosen, subject, object, action }) => `${subject} posa ${object} sur ${chosen}, qui ${action}.`,
+  ({ chosen, witness, place, event }) => `${witness} trouva ${chosen} endormi dans ${place}. Sans bruit, ${event}.`,
+];
+
+/** Creates one short, non-interpretive surreal scene without any network request. */
+export function generateDream({ chosenEmoji, constellation = [], seed = crypto.randomUUID() }) {
+  if (!chosenEmoji?.emoji) throw new Error("Un émoji sélectionné est nécessaire.");
+  const random = seededRandom(seed);
+  const companions = constellation.filter((item) => item.id !== chosenEmoji.id);
+  const complementary = companions.length ? pick(companions, random).emoji : "🌙";
+  const context = { chosen: chosenEmoji.emoji, subject: complementary, action: pick(impossibleActions, random), place: pick(places, random), object: pick(objects, random), transformation: pick(transformations, random), event: pick(events, random), witness: pick(witnesses, random) };
+  const templateIndex = Math.floor(random() * templates.length);
+  const text = templates[templateIndex](context);
+  return { text, seed, templateKey: `surreal-${templateIndex + 1}` };
 }
