@@ -2,12 +2,10 @@ import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "r
 import Layout from "../components/Layout";
 import Home from "../pages/Home";
 import Launch from "../pages/Launch";
-import Scenes from "../pages/Scenes";
 import Reveal from "../pages/Reveal";
-import PassDream from "../pages/PassDream";
 import Account from "../pages/Account";
-import { generateDreamScenes } from "../services/dreamService";
-import { syncJourney } from "../services/syncService";
+import { generateDream } from "../services/dreamService";
+import { syncDream } from "../services/syncService";
 import { initializeAnonymousPlayer } from "../services/anonymousPlayer";
 import {
   clearAppState,
@@ -22,9 +20,7 @@ import { APP_CONFIG } from "../config/app";
 const PAGE_COMPONENTS = {
   [STEPS.HOME]: Home,
   [STEPS.CHOOSE]: Launch,
-  [STEPS.SCENES]: Scenes,
   [STEPS.REVEAL]: Reveal,
-  [STEPS.PASS]: PassDream,
   [STEPS.ACCOUNT]: Account,
 };
 
@@ -43,7 +39,7 @@ export default function App() {
   }, [state]);
 
   useEffect(() => {
-    syncJourney(state.journey).catch((error) => {
+    syncDream(state.journey).catch((error) => {
       console.warn("Impossible de synchroniser le rêve.", error);
     });
   }, [state.journey]);
@@ -93,30 +89,19 @@ export default function App() {
         });
       },
 
-      showScenes(selections) {
-        const scenes = generateDreamScenes(selections);
+      chooseEmoji(constellation, selectedEmoji) {
+        const dream = generateDream({ chosenEmoji: selectedEmoji, constellation: constellation.emojis });
         dispatch({
-          type: EVENTS.SHOW_SCENES,
+          type: EVENTS.REVEAL_DREAM,
           payload: {
-            selections,
-            scenes,
+            constellation,
+            selectedEmoji,
+            dream,
+            generationSeed: dream.seed,
+            templateKey: dream.templateKey,
           },
         });
-        trackEvent("dream_scenes_offered", { constellation: selections.networkId, emoji_ids: selections.bubbleIds });
-      },
-
-      reveal(dream, constellation) {
-        dispatch({ type: EVENTS.REVEAL_DREAM, payload: { dream } });
-        trackEvent("dream_revealed", { constellation });
-      },
-
-      openPass() {
-        dispatch({ type: EVENTS.OPEN_PASS });
-      },
-
-      passDream(passer) {
-        dispatch({ type: EVENTS.PASS_DREAM, payload: { passer } });
-        trackEvent("dream_passed", { passer_id: passer.id, cycle_position: passer.position });
+        trackEvent("dream_revealed", { constellation: constellation.id, emoji_id: selectedEmoji.id });
       },
 
       restart() {

@@ -1,9 +1,8 @@
-const emoji = (id, symbol, keywords, linked, associations) => ({
+const emoji = (id, symbol, keywords, associations) => ({
   id,
   emoji: symbol,
   keywords,
-  linked,
-  associations,
+  metadata: { nouns: associations, verbs: [], places: [], objects: [], transformations: [] },
 });
 
 // A constellation is deliberately small: it is a single place to wander, not a graph to solve.
@@ -13,18 +12,7 @@ export const constellations = [
     name: "Forêt",
     emoji: "🌲",
     emojis: [
-      emoji("mushroom", "🍄", ["chapeau", "sous-bois"], ["owl", "key"], ["des parapluies miniatures", "une cave à nuages"]),
-      emoji("fox", "🦊", ["roux", "queue"], ["moon", "feather"], ["un manteau qui miaule", "des traces en forme de virgules"]),
-      emoji("owl", "🦉", ["nuit", "regard"], ["mushroom", "key"], ["des lunettes pleines de mousse", "un violon sans cordes"]),
-      emoji("acorn", "🌰", ["graine", "bois"], ["mushroom", "deer"], ["un escalier de poche", "des dents de lait"]),
-      emoji("deer", "🦌", ["bois", "clairière"], ["acorn", "rain"], ["une couronne de fenêtres", "un train très lent"]),
-      emoji("fern", "🌿", ["feuille", "vert"], ["snail", "rain"], ["des mains qui applaudissent", "une carte marine"]),
-      emoji("snail", "🐌", ["spirale", "lent"], ["fern", "key"], ["une maison à roulettes", "un orchestre de miettes"]),
-      emoji("key", "🗝️", ["porte", "métal"], ["owl", "snail"], ["une serrure qui baille", "des moustaches dorées"]),
-      emoji("rain", "🌧️", ["gouttes", "ciel"], ["deer", "fern"], ["des poissons transparents", "un rideau qui pousse"]),
-      emoji("moon", "🌙", ["lune", "argent"], ["fox", "feather"], ["un bouton de nacre", "une lampe renversée"]),
-      emoji("feather", "🪶", ["plume", "air"], ["fox", "moon"], ["un secret froissé", "une échelle légère"]),
-      emoji("firefly", "✨", ["lueur", "insecte"], ["mushroom", "moon"], ["des points de couture", "un alphabet qui flotte"]),
+      emoji("mushroom", "🍄", ["chapeau", "sous-bois"], ["des parapluies miniatures", "une cave à nuages"]), emoji("fox", "🦊", ["roux", "queue"], ["un manteau qui miaule"]), emoji("owl", "🦉", ["nuit", "regard"], ["un violon sans cordes"]), emoji("acorn", "🌰", ["graine", "bois"], ["un escalier de poche"]), emoji("deer", "🦌", ["bois", "clairière"], ["un train très lent"]), emoji("fern", "🌿", ["feuille", "vert"], ["une carte marine"]), emoji("snail", "🐌", ["spirale", "lent"], ["un orchestre de miettes"]), emoji("key", "🗝️", ["porte", "métal"], ["une serrure qui baille"]), emoji("rain", "🌧️", ["gouttes", "ciel"], ["des poissons transparents"]), emoji("moon", "🌙", ["lune", "argent"], ["une lampe renversée"]), emoji("feather", "🪶", ["plume", "air"], ["une échelle légère"]), emoji("firefly", "✨", ["lueur", "insecte"], ["un alphabet qui flotte"]),
     ],
   },
   {
@@ -66,6 +54,11 @@ export const constellations = [
     ],
   },
 ];
+
+// IDs are globally unique, matching the persisted constellation_emojis primary key.
+constellations.forEach((constellation) => {
+  constellation.emojis.forEach((item) => { item.id = `${constellation.id}-${item.id}`; });
+});
 
 export function getConstellation(id) {
   return constellations.find((constellation) => constellation.id === id);

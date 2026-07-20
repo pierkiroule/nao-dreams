@@ -9,8 +9,8 @@ export function createJourney({
     id: crypto.randomUUID(),
     naoId,
     seriesId,
-    selections: {},
-    networkId: null,
+    constellation: null,
+    selectedEmoji: null,
     dream: "",
     status: JOURNEY_STATUS.CHOOSING,
     receivedAt: new Date().toISOString(),
@@ -21,14 +21,15 @@ export function createJourney({
 
 export function completeDreamJourney(
   journey,
-  selections,
-  dream,
+  { constellation, selectedEmoji, dream, generationSeed, templateKey },
 ) {
   return {
     ...journey,
-    selections,
-    networkId: selections.networkId,
-    dream,
+    constellation,
+    selectedEmoji,
+    dream: dream.text,
+    generationSeed,
+    templateKey,
     status: JOURNEY_STATUS.DREAM_REVEALED,
     createdAt: new Date().toISOString(),
   };
