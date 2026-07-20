@@ -1,0 +1,2 @@
+import Button from "../components/Button"; import FloatingNut from "../components/FloatingNut";
+export default function InvitationScreen({ onEnter }) { return <section className="page invitation-screen"><FloatingNut/><p className="eyebrow">NOA DREAMS</p><h2 className="page-title">Someone chose you.</h2><p className="page-text">Noa voyage de rêve en rêve.<br/>Choisis un signe pour poursuivre son odyssée.</p><Button onClick={onEnter}>Entrer dans le rêve</Button></section>; }

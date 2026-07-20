@@ -1,0 +1,2 @@
+import Button from "./Button";
+export default function ShareJourney({ onLater }) { const share=async()=>{ const data={title:"NOA DREAMS",text:"Someone chose you. Ajoute un fragment au rêve de Noa.",url:window.location.href}; if(navigator.share) { await navigator.share(data); return; } await navigator.clipboard?.writeText(data.url); }; return <div className="share-actions"><Button onClick={share}>Je passe Noa</Button><Button variant="secondary" onClick={onLater}>Je garde Noa pour plus tard</Button><p>Un lien sera partagé ou copié pour la prochaine personne.</p></div>; }

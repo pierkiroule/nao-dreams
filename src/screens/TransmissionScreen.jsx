@@ -1,0 +1,2 @@
+import ShareJourney from "../components/ShareJourney";
+export default function TransmissionScreen({ onLater }) { return <section className="page transmission-screen"><p className="eyebrow">La transmission</p><h2 className="page-title">À qui vas-tu confier Noa maintenant ?</h2><p className="page-text">Passe la noix à quelqu’un. Cette personne ajoutera un nouveau signe au rêve.</p><div className="qr-placeholder" aria-label="Emplacement QR code">NOA<br/><span>QR</span></div><ShareJourney onLater={onLater}/></section>; }

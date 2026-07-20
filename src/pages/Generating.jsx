@@ -1,2 +1,0 @@
-import { useEffect } from "react";
-export default function Generating({ actions }) { useEffect(()=>{ const timer=setTimeout(actions.completeGeneration,1800); return()=>clearTimeout(timer); },[actions]); return <section className="page generating-page" aria-live="polite"><div className="generation-orbit"><span>🌙</span><span>✨</span><span>🫧</span></div><p className="eyebrow">Simulation IA en cours</p><h2 className="page-title">Les rêves se mettent à parler entre eux…</h2><p className="page-text">3 crédits sont en train d’être confiés à la marée.</p></section> }
