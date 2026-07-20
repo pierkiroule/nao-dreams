@@ -3,8 +3,11 @@ import Layout from "../components/Layout";
 import Home from "../pages/Home";
 import Launch from "../pages/Launch";
 import Reveal from "../pages/Reveal";
+import Titles from "../pages/Titles";
+import Seeds from "../pages/Seeds";
+import Generating from "../pages/Generating";
 import Account from "../pages/Account";
-import { generateDream } from "../services/dreamService";
+import { generateCoCreativeDream, generateDreamTitles } from "../services/dreamService";
 import { syncDream } from "../services/syncService";
 import { initializeAnonymousPlayer } from "../services/anonymousPlayer";
 import {
@@ -20,6 +23,9 @@ import { APP_CONFIG } from "../config/app";
 const PAGE_COMPONENTS = {
   [STEPS.HOME]: Home,
   [STEPS.CHOOSE]: Launch,
+  [STEPS.TITLES]: Titles,
+  [STEPS.SEEDS]: Seeds,
+  [STEPS.GENERATING]: Generating,
   [STEPS.REVEAL]: Reveal,
   [STEPS.ACCOUNT]: Account,
 };
@@ -89,19 +95,26 @@ export default function App() {
         });
       },
 
-      chooseEmoji(constellation, selectedEmoji) {
-        const dream = generateDream({ chosenEmoji: selectedEmoji, constellation: constellation.emojis });
-        dispatch({
-          type: EVENTS.REVEAL_DREAM,
-          payload: {
-            constellation,
-            selectedEmoji,
-            dream,
-            generationSeed: dream.seed,
-            templateKey: dream.templateKey,
-          },
-        });
-        trackEvent("dream_revealed", { constellation: constellation.id, emoji_id: selectedEmoji.id });
+      saveConstellation(emojis) {
+        const titles = generateDreamTitles({ emojis });
+        dispatch({ type: EVENTS.SAVE_CONSTELLATION, payload: { emojis, titles } });
+        trackEvent("constellation_drawn", { emoji_count: emojis.length });
+      },
+
+      saveTitle(title, resonance) {
+        dispatch({ type: EVENTS.SAVE_TITLE, payload: { title, resonance } });
+      },
+
+      saveSeeds(seedCount) {
+        dispatch({ type: EVENTS.SAVE_SEEDS, payload: { seedCount } });
+        trackEvent("co_created_dream_started", { seed_count: seedCount, credit_cost: 3 });
+      },
+
+      completeGeneration() {
+        const { journey } = state;
+        const dream = generateCoCreativeDream({ emojis: journey.selectedEmojis, title: journey.chosenTitle, resonance: journey.personalResonance, seedCount: journey.seedCount });
+        dispatch({ type: EVENTS.REVEAL_DREAM, payload: { dream, generationSeed: dream.seed, templateKey: dream.templateKey } });
+        trackEvent("dream_revealed", { emoji_count: journey.selectedEmojis.length, seed_count: journey.seedCount, credit_cost: 3 });
       },
 
       restart() {
@@ -109,7 +122,7 @@ export default function App() {
         dispatch({ type: EVENTS.RESTART });
       },
     }),
-    [initializeNao],
+    [initializeNao, state.journey],
   );
 
   const CurrentPage = PAGE_COMPONENTS[state.step] ?? Home;

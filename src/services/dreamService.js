@@ -36,3 +36,22 @@ export function generateDream({ chosenEmoji, constellation = [], seed = crypto.r
   const text = templates[templateIndex](context);
   return { text, seed, templateKey: `surreal-${templateIndex + 1}` };
 }
+
+const titleBeginnings = ["La chambre où", "Le jour où", "Sous la peau de", "L'archive secrète de", "Le bateau qui attend", "La constellation de"];
+const titleEndings = ["la lune apprend à nager", "les lucioles gardent la porte", "un silence devient bleu", "les marées se souviennent", "le vent écrit ton nom", "les objets rêvent encore"];
+
+export function generateDreamTitles({ emojis, seed = crypto.randomUUID() }) {
+  const random = seededRandom(seed);
+  const names = emojis.map((item) => item.label).filter(Boolean);
+  return Array.from({ length: 3 }, (_, index) => {
+    const companion = names.length ? names[Math.floor(random() * names.length)] : "la nuit";
+    return `${titleBeginnings[(index + Math.floor(random() * titleBeginnings.length)) % titleBeginnings.length]} ${companion} : ${titleEndings[Math.floor(random() * titleEndings.length)]}`;
+  });
+}
+
+export function generateCoCreativeDream({ emojis, title, resonance, seedCount, seed = crypto.randomUUID() }) {
+  const base = generateDream({ chosenEmoji: emojis[0] ?? { id: "moon", emoji: "🌙" }, constellation: emojis, seed });
+  const chorus = seedCount ? `${seedCount} graine${seedCount > 1 ? "s" : ""} de rêveur${seedCount > 1 ? "s" : ""} ancien${seedCount > 1 ? "s" : ""} murmuraient au loin.` : "Le rêve gardait encore toute sa place pour ta propre marée.";
+  const echo = resonance.trim() ? ` Ta résonance — « ${resonance.trim()} » — traversait la scène comme un fil d'argent.` : "";
+  return { ...base, text: `${title}. ${base.text} ${chorus}${echo}` };
+}

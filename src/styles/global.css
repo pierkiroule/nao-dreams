@@ -2753,3 +2753,21 @@ button:focus-visible,
   font-weight: 600;
   text-align: right;
 }
+
+/* Réseau poétique — constellation co-créative */
+.network-page { gap: 16px; }
+.network-heading { display: grid; gap: 4px; }
+.poetic-network { position: relative; min-height: 490px; overflow: hidden; border: 1px solid rgba(177, 199, 255, .18); border-radius: 34px; background: radial-gradient(circle at 50% 42%, rgba(97,125,240,.18), transparent 42%), rgba(5, 12, 35, .58); box-shadow: inset 0 0 60px rgba(97,125,240,.08), var(--shadow); }
+.poetic-network::after { position:absolute; inset:0; pointer-events:none; content:""; background-image:radial-gradient(#dce8ff 1px, transparent 1.4px); background-size:34px 34px; opacity:.25; }
+.network-links { position:absolute; inset: 7% 5%; width:90%; height:86%; overflow:visible; }
+.network-links line { stroke:rgba(167,190,255,.21); stroke-width:.35; transition:opacity .5s ease, stroke .5s ease; }
+.network-links line.is-active { stroke:#c4d5ff; stroke-width:.65; filter:drop-shadow(0 0 1px #88a7ff); }
+.network-node { position:absolute; z-index:1; display:grid; width:54px; min-height:54px; place-items:center; padding:0; border:1px solid rgba(195,214,255,.35); border-radius:50%; background:radial-gradient(circle at 33% 28%,rgba(255,255,255,.42),transparent 19%),rgba(65,93,182,.4); box-shadow:0 0 20px rgba(110,141,255,.26); transform:translate(-50%,-50%); }
+.network-node span { font-size:1.55rem; }.network-node.is-selected { border-color:#eff4ff; background:radial-gradient(circle at 33% 28%,rgba(255,255,255,.75),transparent 19%),rgba(104,137,247,.72); box-shadow:0 0 28px rgba(154,182,255,.75); }
+.poetic-network.is-drawn .network-node:not(.is-selected) { opacity:0; transform:translate(-50%,-50%) scale(.2); pointer-events:none; transition:opacity .65s ease, transform .65s ease; }.poetic-network.is-drawn .network-links line:not(.is-active) { opacity:0; }
+.network-count { margin:0; color:var(--blue-300); font-size:.82rem; text-align:center; }.network-confirm { display:grid; gap:12px; }.network-confirm p { margin:0; color:var(--mist); text-align:center; }
+.title-options { display:grid; gap:11px; }.title-option { min-height:78px; border-radius:18px; font-family:Georgia,serif; font-size:1.04rem; line-height:1.35; }.resonance-field { display:grid; gap:8px; color:var(--moon); font-size:.92rem; }.resonance-field span { color:var(--muted); font-size:.78rem; }.resonance-field textarea { width:100%; min-height:108px; padding:14px; border:1px solid var(--border); border-radius:16px; color:var(--moon); background:rgba(7,13,34,.55); resize:vertical; }
+.seed-picker { display:grid; grid-template-columns:repeat(4,1fr); gap:9px; }.seed-picker button { display:grid; min-height:86px; place-items:center; padding:8px; border-radius:17px; background:rgba(15,27,60,.58); }.seed-picker strong { font:500 1.55rem Georgia,serif; }.seed-picker span { color:var(--mist); font-size:.73rem; }.seed-picker button.is-selected { border-color:var(--border-active); background:linear-gradient(145deg,rgba(69,96,193,.82),rgba(35,56,124,.82)); }.credit-note { display:flex; gap:13px; align-items:center; padding:15px; border:1px solid rgba(184,204,255,.2); border-radius:18px; background:rgba(25,41,84,.4); }.credit-note span { font-size:1.5rem; }.credit-note p { margin:0; color:var(--mist); font-size:.86rem; line-height:1.5; }.credit-note strong { color:var(--moon); }
+.generating-page { align-items:center; padding-top:60px; text-align:center; }.generation-orbit { position:relative; display:grid; width:160px; height:160px; place-items:center; border:1px solid rgba(190,211,255,.35); border-radius:50%; animation:dream-orbit-rotation 8s linear infinite; }.generation-orbit span { position:absolute; font-size:1.7rem; }.generation-orbit span:nth-child(1){top:-14px}.generation-orbit span:nth-child(2){right:-12px;bottom:27px}.generation-orbit span:nth-child(3){bottom:-13px;left:23px}.dream-title { font-size:clamp(1.45rem,6vw,2.25rem); }.credit-balance { margin:0; color:var(--mist); text-align:center; }.credit-balance strong { color:var(--moon); }
+@media (max-width:420px) { .poetic-network { min-height:430px; }.network-node { width:47px; min-height:47px; }.network-node span { font-size:1.35rem; } }
+@media (prefers-reduced-motion:reduce) { .generation-orbit { animation:none; } }

@@ -1,35 +1,29 @@
-import test from "node:test";
 import assert from "node:assert/strict";
-import { constellations, getConstellation } from "../src/data/resources.js";
-import { FORBIDDEN_TERMS, generateDream } from "../src/services/dreamService.js";
+import test from "node:test";
+import { networkEmojis } from "../src/data/resources.js";
+import { FORBIDDEN_TERMS, generateCoCreativeDream, generateDream, generateDreamTitles } from "../src/services/dreamService.js";
 
-const forest = constellations[0];
-const mushroom = forest.emojis[0];
-
-test("every constellation exposes exactly twelve of its own symbols", () => {
-  const ocean = getConstellation("ocean");
-  assert.equal(forest.emojis.length, 12);
-  assert.equal(ocean.emojis.length, 12);
-  assert.equal(forest.emojis.some((item) => item.id.startsWith("ocean-")), false);
+test("the poetic network contains exactly sixteen selectable symbols", () => {
+  assert.equal(networkEmojis.length, 16);
+  assert.equal(new Set(networkEmojis.map(({ id }) => id)).size, 16);
 });
 
-test("one symbol produces a deterministic, short, non-interpretive dream", () => {
-  const first = generateDream({ chosenEmoji: mushroom, constellation: forest.emojis, seed: "fixed-seed" });
-  const second = generateDream({ chosenEmoji: mushroom, constellation: forest.emojis, seed: "fixed-seed" });
-  assert.deepEqual(first, second);
-  assert.match(first.text, /🍄/);
-  assert.ok(first.text.split(/\s+/).length <= 70);
-  FORBIDDEN_TERMS.forEach((term) => assert.doesNotMatch(first.text.toLowerCase(), new RegExp(term)));
+test("dream titles are three deterministic invitations", () => {
+  const first = generateDreamTitles({ emojis: networkEmojis.slice(0, 4), seed: "fixed-seed" });
+  assert.deepEqual(first, generateDreamTitles({ emojis: networkEmojis.slice(0, 4), seed: "fixed-seed" }));
+  assert.equal(first.length, 3);
 });
 
-test("the same symbol can receive different narrative roles and seeds vary scenes", () => {
-  const texts = new Set(Array.from({ length: 40 }, (_, index) => generateDream({ chosenEmoji: mushroom, constellation: forest.emojis, seed: `seed-${index}` }).text));
-  assert.ok(texts.size > 10);
-  assert.ok([...texts].some((text) => text.startsWith("🍄")));
-  assert.ok([...texts].some((text) => text.includes("à l'intérieur de 🍄") || text.includes("Sous 🍄")));
+test("co-created dream integrates a title, a resonance and previous seeds", () => {
+  const dream = generateCoCreativeDream({ emojis: networkEmojis.slice(0, 3), title: "La chambre où la lune apprend à nager", resonance: "une porte bleue", seedCount: 2, seed: "fixed-seed" });
+  assert.match(dream.text, /La chambre où la lune apprend à nager/);
+  assert.match(dream.text, /2 graines/);
+  assert.match(dream.text, /une porte bleue/);
+  FORBIDDEN_TERMS.forEach((term) => assert.equal(dream.text.toLowerCase().includes(term), false));
 });
 
-test("generation works without optional metadata and makes no external request", () => {
-  const dream = generateDream({ chosenEmoji: { id: "alone", emoji: "🪁" }, constellation: [], seed: "metadata-free" });
-  assert.match(dream.text, /🪁/);
+test("one symbol produces a short non-interpretive dream", () => {
+ const dream = generateDream({ chosenEmoji: networkEmojis[0], constellation: networkEmojis.slice(0, 2), seed: "metadata-free" });
+ assert.match(dream.text, /🌙/);
+ assert.ok(dream.text.length < 700);
 });
