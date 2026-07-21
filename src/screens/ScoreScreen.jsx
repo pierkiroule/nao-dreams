@@ -1,0 +1,2 @@
+import Button from "../components/Button";
+export default function ScoreScreen({ score,remaining,onContinue }) { return <section className="page score-screen"><p className="eyebrow">Ton intuition</p><div className="intuition-score">{score} %</div><h2 className="page-title">Tu as réveillé une partie de mon rêve.</h2><p className="page-text">Merci. J'ai encore besoin de {remaining} rêveur{remaining>1?"s":""}.</p><Button onClick={onContinue}>Voir la progression</Button></section>; }

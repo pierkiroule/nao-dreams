@@ -1,21 +1,8 @@
 import { DEMO_JOURNEY_ID, DREAM_REVEAL_THRESHOLD } from "./dreamRepository.js";
-const KEY = "noa-dreams-local-journey-v4";
-const now = () => new Date().toISOString();
-
-export function createSeededJourney({ seedEmoji, seedLabel, openingScene, constellationId = "passages", revealThreshold = DREAM_REVEAL_THRESHOLD }) {
-  const createdAt = now();
-  const journey = { id: DEMO_JOURNEY_ID, status: "active", createdAt, revealThreshold, contributionCount: 1, currentScene: openingScene };
-  const seed = { id: "seed-001", journeyId: journey.id, emoji: seedEmoji, label: seedLabel, openingScene, constellationId, position: 0, createdAt, isSeed: true };
-  return { journey, seed, contributions: [seed] };
-}
-function seed() { return createSeededJourney({ seedEmoji: "🚪", seedLabel: "Ce qui s'ouvre", openingScene: "Une porte flotte au milieu d'une mer immobile.", constellationId: "passages" }); }
-function read() { try { return JSON.parse(localStorage.getItem(KEY)) || seed(); } catch { return seed(); } }
-function write(value) { localStorage.setItem(KEY, JSON.stringify(value)); return value; }
-export const LocalDreamRepository = {
-  async getJourney() { return read().journey; },
-  async getContributions() { return read().contributions; },
-  async addContribution(contribution, scene) { const data = read(); data.contributions.push(contribution); data.journey.contributionCount += 1; data.journey.currentScene = scene; if (data.journey.contributionCount >= data.journey.revealThreshold) data.journey.status = "ready"; write(data); return data.journey; },
-  async saveEcho(id, echo) { const data = read(); const contribution = data.contributions.find((item) => item.id === id); if (contribution) contribution.echo = echo; write(data); return data.journey; },
-  async resetDemoJourneyWithSeed() { const data = seed(); write(data); return data.journey; },
-};
-export async function resetDemoJourneyWithSeed() { return LocalDreamRepository.resetDemoJourneyWithSeed(); }
+import { futureDream } from "../data/futureDream.js";
+const KEY="noa-future-demo-v1"; const now=()=>new Date().toISOString();
+const echoSeed = { ...futureDream, title: "L’Écho qui repart demain", story: "Une ville invisible apprend à respirer sous les eaux. Les symboles laissés par cinq écouteurs y deviennent des fenêtres vers un futur qui change de voix." };
+export function createSeededJourney({ revealThreshold=DREAM_REVEAL_THRESHOLD, dream=futureDream }={}) { const createdAt=now(); const journey={id:DEMO_JOURNEY_ID,status:"active",createdAt,revealThreshold,contributionCount:0,seed:dream,echoAnswers:[]}; const seed={id:"seed-001",journeyId:journey.id,emoji:"🌊",label:"Le rêve du futur",openingScene:"Une lueur traverse une mer immobile. Quelque chose dort derrière l'horizon.",createdAt,isSeed:true}; return {journey,seed,contributions:[]}; }
+function seed(kind="original"){return createSeededJourney({ dream: kind === "echo" ? echoSeed : futureDream });}function read(){try{return JSON.parse(localStorage.getItem(KEY))||seed();}catch{return seed();}}function write(value){localStorage.setItem(KEY,JSON.stringify(value));return value;}
+export const LocalDreamRepository={async getJourney(){return read().journey;},async getContributions(){return read().contributions;},async addContribution(contribution){const data=read();data.contributions.push(contribution);data.journey.contributionCount+=1;data.journey.echoAnswers.push(...contribution.answers.map((answer)=>answer.symbol));if(data.journey.contributionCount>=data.journey.revealThreshold)data.journey.status="ready";write(data);return data.journey;},async chooseNextDream(kind){const data=seed(kind);write(data);return data.journey;},async resetDemoJourneyWithSeed(){const data=seed();write(data);return data.journey;}};
+export async function resetDemoJourneyWithSeed(){return LocalDreamRepository.resetDemoJourneyWithSeed();}

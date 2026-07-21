@@ -1,23 +1,23 @@
-# NOA DREAMS
+# NOA DU FUTUR
 
-## Someone chose you.
+## Une noix, cinq interprètes, deux rêves
 
-NOA DREAMS est un cadavre exquis onirique pensé pour accompagner une noix physique munie d’un QR code ou d’un tag NFC. Chaque voyage est lancé par un **fragment-source** déposé par son créateur ; chaque personne devine d’abord une trace déjà présente, puis choisit **un seul emoji** pour poursuivre le rêve collectif.
+NOA est une petite noix qui voyage de main en main. Elle porte un rêve du futur, encore secret, que cinq personnes aident à réveiller. Personne ne crée ce rêve seul : chaque passeur répond à deux énigmes bienveillantes, puis ses intuitions font naître **l’Écho**, une interprétation collective du rêve originel.
 
-## Parcours
+## Parcours d’un passeur
 
-1. Accueil — une micro-scène déjà commencée par le fragment-source.
-2. Intuition — le joueur tente de deviner un signe antérieur.
-3. Réponse — la trace est révélée, puis le joueur ajoute son propre signe.
-4. Conséquence — le rêve répond immédiatement ; un écho privé est facultatif.
-5. Progression et transmission — le nombre de signes est visible, sans révéler le rêve entier.
-6. Révélation finale — le récit apparaît au seuil défini.
+1. Rencontre — Noa demande de l’aider à réveiller son rêve.
+2. Énigmes — deux intuitions parmi plusieurs symboles ; aucune réponse n’est présentée comme fausse.
+3. Score — Noa révèle un score d’intuition personnel et encourage le passeur.
+4. Progression — les cinq contributions sont comptées sans révéler le rêve secret.
+5. Transmission — Noa repart physiquement vers une autre personne.
+6. Révélation — après le cinquième passeur, le rêve originel et l’Écho collectif apparaissent ; le dernier passeur choisit celui qui poursuivra le prochain cycle.
 
 ## Mode démo local
 
-`USE_LOCAL_DEMO` est activé dans `src/services/dreamRepository.js`. L’application fonctionne sans authentification, clé ni réseau : elle initialise localement un voyage avec son fragment-source 🚪, ajoute les signes dans `localStorage`, puis rend le rêve disponible à la révélation au 10e fragment total. Chaque contribution conserve une conséquence et un écho privé éventuel.
+`USE_LOCAL_DEMO` est activé dans `src/services/dreamRepository.js`. Aucun compte, réseau ou clé n’est nécessaire. Un rêve secret est toujours chargé dès la création du voyage, puis cinq passages locaux permettent de le réveiller.
 
-`LocalDreamRepository` est la couche actuellement active. `SupabaseDreamRepository` reste volontairement un emplacement réservé pour la connexion future.
+`createSeededJourney()` crée un voyage jouable avec son fragment-source. `resetDemoJourneyWithSeed()` réinitialise le cycle de démonstration. `LocalDreamRepository` reste l’implémentation active et `SupabaseDreamRepository` est réservé à une synchronisation future.
 
 ## Développement
 

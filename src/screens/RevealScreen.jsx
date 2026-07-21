@@ -1,2 +1,0 @@
-import Button from "../components/Button";
-export default function RevealScreen({ dream, onShare, onQuit }) { return <section className="page reveal-screen"><p className="eyebrow">The dream is ready.</p><div className="reveal-symbols">{dream.symbols.map((symbol,index)=><span key={`${symbol}-${index}`}>{symbol}</span>)}</div><h2 className="page-title">{dream.title}</h2><p className="dream-text reveal-text">{dream.text}</p><Button onClick={onShare}>Partager le rêve</Button><Button variant="secondary" onClick={onQuit}>Quitter le rêve</Button></section>; }

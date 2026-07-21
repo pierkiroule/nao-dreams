@@ -1,3 +1,0 @@
-import Button from "../components/Button";
-import EmojiConstellation from "../components/EmojiConstellation";
-export default function ConstellationScreen({ constellation, selected, preview, onSelect, onConfirm }) { return <section className="page constellation-screen"><p className="eyebrow">{constellation.title}</p><h2 className="page-title">Choisis un signe.</h2><p className="page-text">Touche un signe : il déplacera légèrement le rêve.</p><EmojiConstellation emojis={constellation.emojis} selected={selected} onSelect={onSelect}/>{preview && <p className="scene-preview" aria-live="polite">{preview}</p>}<Button disabled={!selected} onClick={onConfirm}>Je choisis ce signe</Button></section>; }
