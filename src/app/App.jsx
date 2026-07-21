@@ -22,6 +22,14 @@ const playScrountch = () => {
   window.setTimeout(playStamp, 240);
 };
 
+function NowaMark({ compact = false }) {
+  return <svg className={`nowa-mark ${compact ? "is-compact" : ""}`} viewBox="0 0 210 145" role="img" aria-label="NOWA, petite noix punk"><path className="mark-shell" d="M37 75C17 53 30 17 66 13c18-2 30 8 39 18 13-13 31-18 48-10 30 14 33 51 10 72-17 15-42 25-62 25-28 0-49-15-64-43Z"/><path className="mark-hatch" d="m42 47 18 7m-23 13 19 5m76-43 15-9m-4 19 18-5m-5 16 20 2"/><path className="mark-mouth" d="M72 90c15 11 36 11 52-1"/><circle cx="73" cy="68" r="4"/><circle cx="128" cy="67" r="4"/><path className="mark-spark one" d="m22 103 8 6-7 7-8-6Z"/><path className="mark-spark two" d="m179 75 8 6-7 7-8-6Z"/><text x="105" y="139">NOWA</text></svg>;
+}
+
+function GlitchTitle({ children }) {
+  return <h1 className="glitch-title" data-text={children}>{children}</h1>;
+}
+
 export default function App() {
   const [screen, setScreen] = useState("intro");
   const [nightmareId, setNightmareId] = useState("");
@@ -42,11 +50,11 @@ export default function App() {
   const choosePunkline = (id) => { setPunklineId(id); setCustomLine(""); playStamp(); };
   const scrountch = () => { playScrountch(); setIsCrunching(true); setScreen("scrountch"); };
 
-  if (screen === "intro") return <main className="nowa-app intro"><div className="corner-mark">N° 01</div><div className="logo"><span>NOWA</span><small>NOW FUTURE</small></div><div className="intro-copy"><p className="kicker">PETITE NOIX · GRAND DÉSORDRE</p><h1>La p'tite noix punk qui réveille les futurs alternatifs.</h1></div><button className="primary-button" onClick={() => { playStamp(); setScreen("nightmares"); }}>Commencer <i>→</i></button><p className="footer-note">Mange les cauchemars. Crache des futurs.</p></main>;
+  if (screen === "intro") return <main className="nowa-app intro"><div className="corner-mark">N° 01</div><div className="logo"><span>NOWA</span><small>NOW FUTURE</small></div><NowaMark/><div className="intro-copy"><p className="kicker">PETITE NOIX · GRAND DÉSORDRE</p><h1>La p'tite noix punk qui réveille les futurs alternatifs.</h1></div><button className="primary-button" onClick={() => { playStamp(); setScreen("nightmares"); }}>Commencer <i>→</i></button><p className="footer-note">Mange les cauchemars. Crache des futurs.</p></main>;
 
-  if (screen === "nightmares") return <main className="nowa-app"><header className="topbar"><div className="mini-logo">NOWA <span>NOW FUTURE</span></div><span>01 / 03</span></header><section className="flow-screen"><p className="kicker">UN SEUL À LA FOIS</p><h1>Choisis un<br/><em>cauchemar.</em></h1><div className="choice-stack">{nightmares.map((nightmare, index) => <button key={nightmare.id} className={`nightmare-card ${nightmareId === nightmare.id ? "is-selected" : ""}`} onClick={() => chooseNightmare(nightmare.id)} aria-pressed={nightmareId === nightmare.id}><b>0{index + 1}</b><span>{nightmare.title}</span></button>)}</div><button className="primary-button" disabled={!nightmareId} onClick={scrountch}>Scrountch <i>→</i></button></section></main>;
+  if (screen === "nightmares") return <main className="nowa-app"><header className="topbar"><div className="mini-logo">NOWA <span>NOW FUTURE</span></div><span>01 / 03</span></header><section className="flow-screen"><p className="kicker">UN SEUL À LA FOIS</p><GlitchTitle>Choisis un cauchemar.</GlitchTitle><div className="choice-stack">{nightmares.map((nightmare, index) => <button key={nightmare.id} className={`nightmare-card ${nightmareId === nightmare.id ? "is-selected" : ""}`} onClick={() => chooseNightmare(nightmare.id)} aria-pressed={nightmareId === nightmare.id}><b>0{index + 1}</b><span>{nightmare.title}</span></button>)}</div><button className="primary-button" disabled={!nightmareId} onClick={scrountch}>Scrountch <i>→</i></button></section></main>;
 
-  if (screen === "scrountch") return <main className="nowa-app crunch-screen"><div className={`crunch-nut ${isCrunching ? "is-crunching" : ""}`} aria-label="NOWA mastique le cauchemar"><span className="nut-eye left"/><span className="nut-eye right"/><span className="nightmare-slip">{chosenNightmare?.title}</span><b>SCROUNTCH</b></div><p className="crunch-count">Scrountch.<br/>Scrountch.</p></main>;
+  if (screen === "scrountch") return <main className="nowa-app crunch-screen"><div className={`crunch-nut ${isCrunching ? "is-crunching" : ""}`} aria-label="NOWA mastique le cauchemar"><NowaMark compact/><span className="nightmare-slip">{chosenNightmare?.title}</span><b>SCROUNTCH</b></div><p className="crunch-count">Scrountch.<br/>Scrountch.</p></main>;
 
   if (screen === "punklines") return <main className="nowa-app"><header className="topbar"><div className="mini-logo">NOWA <span>NOW FUTURE</span></div><span>02 / 03</span></header><section className="flow-screen punkline-screen"><p className="kicker">RÉGURGITÉ PAR NOWA</p><h1>Un futur<br/><em>se défend.</em></h1><div className="punkline-stack">{choices.map((line, index) => <button key={line.id} className={`punkline-card ${punklineId === line.id ? "is-selected" : ""}`} onClick={() => choosePunkline(line.id)} aria-pressed={punklineId === line.id}><b>PUNKLINE 0{index + 1}</b><span>{line.text}</span><i>↗</i></button>)}</div><button className="primary-button" onClick={() => setScreen("choose")} disabled={!punklineId}>Choisir cette Punkline <i>→</i></button></section></main>;
 
