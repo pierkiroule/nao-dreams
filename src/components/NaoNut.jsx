@@ -1,0 +1,2 @@
+import BlackSail from "./BlackSail";
+export default function NaoNut({ open = false, composting = false }) { return <div className={`nao-nut ${open ? "is-open" : ""} ${composting ? "is-composting" : ""}`} aria-label={open ? "NAO ouverte, comme un petit voilier" : "NAO fermée"} role="img"><div className="nut-shell nut-top" /><div className="mast" /><BlackSail active={composting} /><div className="nut-shell nut-bottom" /><span className="nut-glow" /></div>; }

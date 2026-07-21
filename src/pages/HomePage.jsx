@@ -1,0 +1,2 @@
+import NaoNut from "../components/NaoNut";
+export default function HomePage({ next, howItWorks }) { return <section className="page home-page"><NaoNut/><p className="eyebrow">Recycle ton souci. Révèle sa résonance.</p><h2 className="page-title">Quelque chose te préoccupe ?</h2><p className="page-text">NAO recycle les soucis humains et les transforme en résonances inspirantes.</p><div className="actions"><button onClick={next}>Confier un souci à NAO</button><button className="secondary" onClick={howItWorks}>Comment ça marche ?</button></div></section>; }

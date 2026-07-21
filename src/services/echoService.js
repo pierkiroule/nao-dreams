@@ -1,0 +1,2 @@
+import { emotions } from "../data/emotions";
+export async function getNetworkEcho(fingerprint) { const seed = [...fingerprint.id].reduce((n, char) => n + char.charCodeAt(0), 0); const themes = fingerprint.themes.length ? fingerprint.themes : ["avenir", "lien"]; return { relatedCount: 1180 + (seed % 2210), dominantEmotion: fingerprint.emotions[0] ?? emotions[0].id, nearbyThemes: [...themes, "changement", "soutien"].filter((v, i, all) => all.indexOf(v) === i).slice(0, 2), shortSentence: "Tu n’es pas seul à regarder dans cette direction." }; }
