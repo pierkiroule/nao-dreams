@@ -10,3 +10,5 @@ const generic = ["Le rêve change de texture.", "Un détail nouveau tremble à l
 export function getDreamEffect(emoji) { return effects[emoji.symbol] ?? [`${emoji.symbol} ${emoji.label.toLowerCase()} dans le paysage.`, generic[1]]; }
 export function initialScene() { return "Cette nuit, Noa a rêvé d'une porte au milieu de la mer. Quelque chose attend derrière."; }
 export function nextScene(effect) { return `${effect} Le rêve reste incomplet, comme s'il attendait le prochain regard.`; }
+export function selectIntuitionTarget(previousContributions) { return previousContributions.find((contribution) => contribution.isSeed) ?? previousContributions[0] ?? null; }
+export function buildIntuitionChoices(target, constellation) { const seedChoice = { symbol: target.emoji, label: target.label }; const decoys = constellation.emojis.filter((emoji) => emoji.symbol !== target.emoji).slice(0, 2); return [seedChoice, ...decoys].sort((left, right) => left.symbol.localeCompare(right.symbol)); }

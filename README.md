@@ -2,20 +2,20 @@
 
 ## Someone chose you.
 
-NOA DREAMS est un cadavre exquis onirique pensé pour accompagner une noix physique munie d’un QR code ou d’un tag NFC. Chaque personne choisit **un seul emoji** : son fragment rejoint un rêve collectif, puis la noix continue son voyage.
+NOA DREAMS est un cadavre exquis onirique pensé pour accompagner une noix physique munie d’un QR code ou d’un tag NFC. Chaque voyage est lancé par un **fragment-source** déposé par son créateur ; chaque personne devine d’abord une trace déjà présente, puis choisit **un seul emoji** pour poursuivre le rêve collectif.
 
 ## Parcours
 
-1. Découverte — une micro-scène déjà commencée par Noa.
-2. Constellation — une constellation de 12 signes, un seul choix et une conséquence en aperçu.
-3. Conséquence — le rêve répond immédiatement et le joueur peut déposer un écho privé facultatif.
-4. Direction — le joueur choisit la prochaine exploration : présence, passage ou transformation.
-5. Transmission — partage du lien avec la prochaine personne.
-6. Progression et révélation — nombre de fragments, bifurcations et rêve final au seuil défini.
+1. Accueil — une micro-scène déjà commencée par le fragment-source.
+2. Intuition — le joueur tente de deviner un signe antérieur.
+3. Réponse — la trace est révélée, puis le joueur ajoute son propre signe.
+4. Conséquence — le rêve répond immédiatement ; un écho privé est facultatif.
+5. Progression et transmission — le nombre de signes est visible, sans révéler le rêve entier.
+6. Révélation finale — le récit apparaît au seuil défini.
 
 ## Mode démo local
 
-`USE_LOCAL_DEMO` est activé dans `src/services/dreamRepository.js`. L’application fonctionne sans authentification, clé ni réseau : elle initialise localement un rêve avec 7 fragments, ajoute le signe du joueur dans `localStorage`, puis rend le rêve disponible à la révélation au 8e fragment. Chaque contribution conserve une conséquence, un écho privé éventuel et la direction donnée à la personne suivante.
+`USE_LOCAL_DEMO` est activé dans `src/services/dreamRepository.js`. L’application fonctionne sans authentification, clé ni réseau : elle initialise localement un voyage avec son fragment-source 🚪, ajoute les signes dans `localStorage`, puis rend le rêve disponible à la révélation au 10e fragment total. Chaque contribution conserve une conséquence et un écho privé éventuel.
 
 `LocalDreamRepository` est la couche actuellement active. `SupabaseDreamRepository` reste volontairement un emplacement réservé pour la connexion future.
 
