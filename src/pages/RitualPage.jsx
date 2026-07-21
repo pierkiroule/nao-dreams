@@ -1,0 +1,2 @@
+import NaoNut from "../components/NaoNut";
+export default function RitualPage({ next }) { return <section className="page"><NaoNut open/><h2 className="page-title">Pose un doigt sur la voile.</h2><p className="page-text">Pense quelques secondes à ce qui te préoccupe.</p><div className="breath"><span>Inspire</span><b>•°</b><span>Expire</span></div><button onClick={next}>Mon souci est là</button></section>; }

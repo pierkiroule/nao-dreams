@@ -1,0 +1,2 @@
+const options = ["Quelqu’un de proche", "Quelqu’un qui traverse une période difficile", "Quelqu’un que je veux surprendre", "Je laisserai NAO choisir son prochain Gardien"];
+export default function PassNao({ selected, onChange }) { return <div className="pass-options">{options.map((option) => <button key={option} className={`pass-option ${selected === option ? "selected" : ""}`} onClick={() => onChange(option)} aria-pressed={selected === option}>{option}</button>)}</div>; }

@@ -1,0 +1,2 @@
+import NetworkEcho from "../components/NetworkEcho"; import NaoNut from "../components/NaoNut";
+export default function EchoPage({ echo, reveal }) { return <section className="page"><NaoNut composting/><p className="eyebrow">Écho du Réseau · Gratuit</p><h2 className="page-title">Une onde a trouvé ses résonances.</h2><NetworkEcho echo={echo}/><p className="small-text">Tu reçois gratuitement un Écho du Réseau.</p><button onClick={reveal}>Révéler ma Résonance inspirante — 1 crédit</button></section>; }
