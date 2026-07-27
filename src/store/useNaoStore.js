@@ -1,3 +1,0 @@
-import { useState } from "react";
-const makeFingerprint = (values) => ({ id: crypto.randomUUID(), naoId: "NAO-SOUCY-001", ...values, createdAt: new Date().toISOString(), shared: false });
-export function useNaoStore() { const [fingerprint, setFingerprint] = useState({ emotions: [], themes: [], movement: "" }); const [echo, setEcho] = useState(null); const [resonance, setResonance] = useState(null); return { fingerprint, setFingerprint, finalizeFingerprint: () => { const value = makeFingerprint(fingerprint); localStorage.setItem("nao-soucy-active-fingerprint", JSON.stringify(value)); setFingerprint(value); return value; }, echo, setEcho, resonance, setResonance }; }
