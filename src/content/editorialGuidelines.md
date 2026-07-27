@@ -10,6 +10,8 @@
 - Reformuler les récits et éviter les citations longues.
 - Ne pas sacraliser, figer ou exotiser les cultures.
 - Ne pas présenter une tradition comme une vérité universelle ou comme une interprétation de la personne.
+- Ne pas confondre le rêve nocturne avec des concepts plus vastes traduits par « rêve », notamment le *Dreaming* de différentes communautés aborigènes australiennes.
+- Décrire les usages sociaux du rêve — raconter, transmettre, décider, soigner, créer — sans supposer qu'ils ont partout la même fonction.
 - Employer le statut `draft` tant qu'une carte n'a pas bénéficié d'une relecture documentaire spécialisée ; réserver `reviewed` aux contenus relus.
 
 Chaque fiche doit nommer une communauté, une période ou un territoire aussi précisément que les sources le permettent. Une résonance utilise des formulations prudentes : « semble », « peut évoquer », « fait résonner » ou « invite à explorer ».

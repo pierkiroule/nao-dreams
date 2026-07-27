@@ -2,7 +2,7 @@
 
 **La noix qui voyage dans les rêves du monde.**
 
-Nao Dream est une expérience culturelle locale-first liée à une noix NFC. En moins de 45 secondes, une personne choisit quelques emojis et thèmes puis rencontre, par correspondance éditoriale, un récit onirique situé. Il ne s'agit ni d'une interprétation psychologique, ni d'une divination.
+Nao Dream est un atlas anthropologique et culturel local-first lié à une noix NFC. En moins de 45 secondes, une personne choisit quelques emojis et thèmes puis rencontre, par correspondance éditoriale, un récit ou un usage du rêve situé. Il ne s'agit ni d'une interprétation psychologique, ni d'une divination : l'expérience invite à voyager à travers les cultures du rêve.
 
 ## Lancer le projet
 

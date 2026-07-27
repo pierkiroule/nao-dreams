@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { DREAM_CARDS } from "../src/data/dreamCultures.js";
 import { scoreDreamCultureCard, selectDreamCultureCard } from "../src/lib/resonanceEngine.js";
 import { buildResonanceText, RESONANCE_TEMPLATES } from "../src/lib/resonanceText.js";
+import { RESEARCH_PRINCIPLES, RESEARCH_REFERENCES } from "../src/data/researchReferences.js";
 
 const input={emojis:["🌊"],tags:["voyage","passage"]};
 const journey={scanCount:5,recentCardIds:[],discoveredRegions:["Asie"],discoveredCultures:[],lastCategory:"vision"};
@@ -13,3 +14,4 @@ test("les cinq cartes récentes sont exclues",()=>{const first=selectDreamCultur
 test("une région nouvelle reçoit le bonus de diversité",()=>{const card=DREAM_CARDS.find(c=>c.id==="barque-reves");assert.ok(scoreDreamCultureCard(card,input,{...journey,discoveredRegions:[]})>scoreDreamCultureCard(card,input,{...journey,discoveredRegions:[card.region]}))});
 test("le résultat reste stable pour une contribution donnée",()=>{assert.equal(selectDreamCultureCard(input,journey,DREAM_CARDS).id,selectDreamCultureCard(input,journey,DREAM_CARDS).id)});
 test("les phrases restent locales et prudentes",()=>{assert.equal(RESONANCE_TEMPLATES.length,36);const text=buildResonanceText(input,DREAM_CARDS[0]);assert.doesNotMatch(text,/signifie|prouve|révèle que tu es/i)});
+test("la démarche anthropologique expose ses repères et ses limites",()=>{assert.equal(RESEARCH_REFERENCES.length,6);assert.ok(RESEARCH_PRINCIPLES.length>=4);assert.ok(RESEARCH_REFERENCES.every(reference=>reference.author&&reference.work&&reference.focus))});
