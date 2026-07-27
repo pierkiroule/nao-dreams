@@ -23,3 +23,5 @@ Le build de production est généré avec `npm run build` et les tests avec `npm
 - `src/content/editorialGuidelines.md` : règles de rigueur culturelle.
 
 Aucun compte, backend, appel IA, Supabase, géolocalisation ou paiement réel n'est utilisé. Le partage natif et l'export PNG sont réalisés dans le navigateur.
+
+La navigation principale se limite à trois destinations : **Explorer**, le bouton central **Scanner**, et **Mon Nao**. Ce dernier prend la forme d'un passeport local présentant le niveau d'exploration, les découvertes, l'accès à l'Atlas, l'export des données et la simulation Premium.
