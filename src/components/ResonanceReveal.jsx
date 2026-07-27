@@ -1,2 +1,0 @@
-import SymbolPulse from "./SymbolPulse";
-export default function ResonanceReveal({ resonance }) { return <article className="resonance-card"><SymbolPulse small/><p className="eyebrow">Résonance inspirante</p><h2>{resonance.title}</h2>{resonance.text.split("\n\n").map((p) => <p key={p}>{p}</p>)}<strong>{resonance.finalSentence}</strong><small>Cette Résonance est née de ton empreinte et de milliers d’autres soucis anonymes.</small></article>; }

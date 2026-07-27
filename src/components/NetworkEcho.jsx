@@ -1,2 +1,0 @@
-import { emotionLabel } from "../data/emotions";
-export default function NetworkEcho({ echo }) { return <div className="echo-card"><div className="constellation" aria-hidden="true"><i/><i/><i/><i/><i/></div><p className="echo-count">{echo.relatedCount.toLocaleString("fr-FR")} autres empreintes</p><h3>Émotion dominante : {emotionLabel(echo.dominantEmotion)}</h3><p className="nearby">Proche de {echo.nearbyThemes.map((theme) => `#${theme}`).join(" · ")}</p><blockquote>« {echo.shortSentence} »</blockquote></div>; }
