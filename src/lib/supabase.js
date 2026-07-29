@@ -1,12 +1,31 @@
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL?.replace(/\/$/, "");
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
 const SESSION_KEY = "nao-supabase-session";
+const STATUS_EVENT = "nao:supabase-status";
 
 export const isSupabaseConfigured = Boolean(SUPABASE_URL && SUPABASE_KEY);
+let currentStatus = { state: isSupabaseConfigured ? "idle" : "disabled", message: isSupabaseConfigured ? "Connexion à vérifier" : "Mode local", checkedAt: null };
+
+function setStatus(state, message) {
+  currentStatus = { state, message, checkedAt: new Date().toISOString() };
+  globalThis.dispatchEvent?.(new CustomEvent(STATUS_EVENT, { detail: currentStatus }));
+  return currentStatus;
+}
+
+export function getSupabaseStatus() { return currentStatus; }
+export function subscribeSupabaseStatus(listener) {
+  const handler = event => listener(event.detail);
+  globalThis.addEventListener?.(STATUS_EVENT, handler);
+  return () => globalThis.removeEventListener?.(STATUS_EVENT, handler);
+}
 
 async function api(path, { method = "GET", body, token, headers = {} } = {}) {
   const response = await fetch(`${SUPABASE_URL}${path}`, { method, headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token || SUPABASE_KEY}`, "Content-Type": "application/json", ...headers }, body: body === undefined ? undefined : JSON.stringify(body) });
-  if (!response.ok) throw new Error(`Supabase ${response.status}: ${await response.text()}`);
+  if (!response.ok) {
+    const error = new Error(`Supabase ${response.status}: ${await response.text()}`);
+    setStatus("error", error.message);
+    throw error;
+  }
   if (response.status === 204) return null;
   const text = await response.text();
   return text ? JSON.parse(text) : null;
@@ -36,6 +55,19 @@ async function rest(table, { query, returning = false, ...options } = {}) {
   return api(`/rest/v1/${table}${query ? `?${query}` : ""}`, { ...options, token: auth.access_token, headers: { ...options.headers, ...(prefer ? { Prefer: prefer } : {}) } });
 }
 
+export async function testSupabaseConnection() {
+  if (!isSupabaseConfigured) return setStatus("disabled", "Variables Supabase absentes");
+  setStatus("connecting", "Test de la connexion…");
+  try {
+    await session();
+    await rest("dream_cultures", { query: "select=id&limit=1" });
+    return setStatus("connected", "Supabase connecté");
+  } catch (error) {
+    setStatus("error", error.message);
+    throw error;
+  }
+}
+
 export async function registerNutScan(publicCode) {
   if (!isSupabaseConfigured) return null;
   const cacheKey = `nao-scan-${publicCode}`, cached = localStorage.getItem(cacheKey);
@@ -48,11 +80,13 @@ export async function registerNutScan(publicCode) {
   const value = { userId: auth.user.id, nutId: nuts[0].id, scanId: scans[0].id };
   await rest("user_access", { method: "POST", query: "on_conflict=user_id", headers: { Prefer: "resolution=ignore-duplicates" }, body: { user_id: value.userId, activation_nut_id: value.nutId, activation_scan_id: value.scanId, access_status: "active", access_level: "free" } });
   localStorage.setItem(cacheKey, JSON.stringify(value));
+  setStatus("synced", "Scan synchronisé");
   return value;
 }
 
 export async function saveComposition(publicCode, input, card) {
   if (!isSupabaseConfigured) return null;
+  setStatus("syncing", "Synchronisation en cours…");
   const activation = await registerNutScan(publicCode);
   const cultures = await rest("dream_cultures", { query: `select=id&slug=eq.${encodeURIComponent(card.id)}&active=eq.true&status=eq.published&limit=1` });
   if (!cultures?.[0]) throw new Error(`La culture publiée « ${card.id} » est absente de Supabase.`);
@@ -63,5 +97,6 @@ export async function saveComposition(publicCode, input, card) {
   await rest("composition_cultures", { method: "POST", body: { composition_id: composition.id, culture_id: cultures[0].id, selection_order: 1 } });
   const values = [...input.emojis.map(value => ({ resonance_type: "emoji", value })), ...input.tags.map(value => ({ resonance_type: "tag", value }))];
   if (values.length) await rest("dream_resonances", { method: "POST", body: values.map(item => ({ ...item, composition_id: composition.id, user_id: activation.userId })) });
+  setStatus("synced", "Découverte synchronisée");
   return { compositionId: composition.id, scanId: activation.scanId };
 }
