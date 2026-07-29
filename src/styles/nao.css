@@ -13,6 +13,7 @@
 .odyssey-story p{margin:0 0 1.15rem}
 .odyssey-story p:last-child{margin-bottom:0}
 .odyssey-story .odyssey-closing{color:var(--text-main);font-family:Fraunces,serif;font-size:1.08em}
+.inspirations h2{margin:0 0 1.5rem;color:var(--text-main);font-family:Fraunces,serif;font-size:1.35rem;font-weight:400;text-align:center}
 
 @media(max-width:520px){
  .grand-o-entry{padding-inline:1.1rem}
