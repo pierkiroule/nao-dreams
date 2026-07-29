@@ -49,10 +49,48 @@ async function session() {
   return created;
 }
 
+export async function getAuthenticatedUser() {
+  if (!isSupabaseConfigured) return null;
+  const auth = await session();
+  return auth?.user || null;
+}
+
 async function rest(table, { query, returning = false, ...options } = {}) {
   const auth = await session();
   const prefer = [options.headers?.Prefer, returning && "return=representation"].filter(Boolean).join(",");
   return api(`/rest/v1/${table}${query ? `?${query}` : ""}`, { ...options, token: auth.access_token, headers: { ...options.headers, ...(prefer ? { Prefer: prefer } : {}) } });
+}
+
+export async function getNaoAccess() {
+  const user = await getAuthenticatedUser();
+  if (!user) return { user: null, access: null };
+  const rows = await rest("user_access", { query: `select=access_status,access_level,activated_at&user_id=eq.${encodeURIComponent(user.id)}&limit=1` });
+  return { user, access: rows?.[0] || null };
+}
+
+export async function upsertDreamComposition(dream) {
+  const { user, access } = await getNaoAccess();
+  if (!user) throw new Error("Aucun utilisateur Supabase authentifié.");
+  if (access?.access_status !== "active") throw new Error("L’accès NAO n’est pas activé.");
+  const cultures=await rest("dream_cultures",{query:`select=id,slug&slug=in.(${dream.cultureIds.map(encodeURIComponent).join(",")})&active=eq.true&status=eq.published`});
+  const cultureIds=dream.cultureIds.map(slug=>cultures?.find(culture=>culture.slug===slug)?.id);
+  if(cultureIds.some(id=>!id))throw new Error("Une ou plusieurs cultures ne sont pas disponibles.");
+  const existing = await rest("dream_compositions", { query: `select=id&user_id=eq.${encodeURIComponent(user.id)}&client_id=eq.${encodeURIComponent(dream.id)}&limit=1` });
+  let compositionId = existing?.[0]?.id;
+  if (!compositionId) {
+    try {
+      const rows = await rest("dream_compositions", { method: "POST", returning: true, body: { user_id:user.id,client_id:dream.id,title:dream.title.slice(0,150),dream_text:dream.dreamText.slice(0,3000),composition_mode:"rules",visibility:"private",locale:"fr" } });
+      compositionId = rows?.[0]?.id;
+    } catch (error) {
+      const concurrent = await rest("dream_compositions", { query: `select=id&user_id=eq.${encodeURIComponent(user.id)}&client_id=eq.${encodeURIComponent(dream.id)}&limit=1` });
+      if (!concurrent?.[0]) throw error;
+      compositionId = concurrent[0].id;
+    }
+  }
+  if (!compositionId) throw new Error("La composition n’a pas pu être enregistrée.");
+  await rest("composition_cultures", { method:"DELETE", query:`composition_id=eq.${encodeURIComponent(compositionId)}` });
+  await rest("composition_cultures", { method:"POST", body:cultureIds.map((cultureId,index)=>({composition_id:compositionId,culture_id:cultureId,selection_order:index+1})) });
+  return compositionId;
 }
 
 export async function testSupabaseConnection() {
@@ -82,21 +120,4 @@ export async function registerNutScan(publicCode) {
   localStorage.setItem(cacheKey, JSON.stringify(value));
   setStatus("synced", "Scan synchronisé");
   return value;
-}
-
-export async function saveComposition(publicCode, input, card) {
-  if (!isSupabaseConfigured) return null;
-  setStatus("syncing", "Synchronisation en cours…");
-  const activation = await registerNutScan(publicCode);
-  const cultures = await rest("dream_cultures", { query: `select=id&slug=eq.${encodeURIComponent(card.id)}&active=eq.true&status=eq.published&limit=1` });
-  if (!cultures?.[0]) throw new Error(`La culture publiée « ${card.id} » est absente de Supabase.`);
-  const rawText = (input.message || `${input.emojis.join(" ")} · ${input.tags.join(" · ")}`).trim();
-  const dreamText = rawText.length >= 10 ? rawText : `${rawText} · Nao Dream`;
-  const compositions = await rest("dream_compositions", { method: "POST", returning: true, body: { user_id: activation.userId, activation_scan_id: activation.scanId, title: card.title.slice(0, 150), dream_text: dreamText.slice(0, 3000), composition_mode: "rules", visibility: "private", locale: "fr" } });
-  const composition = compositions[0];
-  await rest("composition_cultures", { method: "POST", body: { composition_id: composition.id, culture_id: cultures[0].id, selection_order: 1 } });
-  const values = [...input.emojis.map(value => ({ resonance_type: "emoji", value })), ...input.tags.map(value => ({ resonance_type: "tag", value }))];
-  if (values.length) await rest("dream_resonances", { method: "POST", body: values.map(item => ({ ...item, composition_id: composition.id, user_id: activation.userId })) });
-  setStatus("synced", "Découverte synchronisée");
-  return { compositionId: composition.id, scanId: activation.scanId };
 }

@@ -1,0 +1,6 @@
+import {useState} from "react";
+import DreamBubble from "./DreamBubble";
+import ResonancePicker from "./ResonancePicker";
+type Culture={id:string;culture:string;emojis:string[];summary:string};
+type Props={cultures:Culture[];title:string;text:string;onRelease:(resonance:string)=>void};
+export default function DreamReading({cultures,title,text,onRelease}:Props){const[resonance,setResonance]=useState(""),[sources,setSources]=useState(false);return <main className="reading-screen"><p className="ocean-whisper">Le rêve prend forme.</p><DreamBubble size="large" intensity={.72}><article><small>UN RÊVE DU GRAND O•°</small><h1>{title}</h1><p>{text}</p><footer>Inspiré par trois échos culturels</footer></article></DreamBubble><p className="culture-echoes">{cultures.map(culture=><span key={culture.id}><i aria-hidden="true">{culture.emojis[0]}</i>{culture.culture.split(/[,(]/)[0]}</span>)}</p><button className="inspiration-toggle" onClick={()=>setSources(!sources)} aria-expanded={sources}>{sources?"Refermer":"Voir les inspirations"}</button>{sources&&<aside className="inspirations">{cultures.map(culture=><p key={culture.id}><b>{culture.culture}</b>{culture.summary}</p>)}</aside>}<ResonancePicker value={resonance} onChange={setResonance} onRelease={()=>onRelease(resonance)}/></main>}
