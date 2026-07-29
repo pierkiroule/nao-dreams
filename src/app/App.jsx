@@ -4,7 +4,7 @@ import { RESEARCH_PRINCIPLES, RESEARCH_REFERENCES } from "../data/researchRefere
 import { buildResonanceText } from "../lib/resonanceText";
 import { selectDreamCultureCard } from "../lib/resonanceEngine";
 import { createContribution, ensureDemoJourney, exportLocalData, getSnapshot, unlockDiscovery } from "../lib/db";
-import { getSupabaseStatus, subscribeSupabaseStatus, testSupabaseConnection } from "../lib/supabase";
+import { getSupabaseStatus, isSupabaseConfigured, subscribeSupabaseStatus, testSupabaseConnection } from "../lib/supabase";
 import "../styles/global.css";
 
 const NAO_ID = "NAO-DREAM-001";
@@ -22,11 +22,19 @@ function Shell({ path, go, children }) {
   return <div className="shell"><header><button className="brand" onClick={() => go("/")}><span className="nut">◉</span><span>NAO DREAM<small>La noix qui voyage</small></span></button></header>{children}<nav aria-label="Navigation principale">{tabs.map(([to,icon,label,kind])=><button aria-current={isActive(kind)?"page":undefined} className={isActive(kind)?"active":""} key={to} onClick={()=>go(to)}><span>{icon}</span><b>{label}</b></button>)}</nav><footer>Une contribution courte · Une culture découverte · Une noix à transmettre</footer></div>;
 }
 
-function SupabaseIndicator(){const [status,setStatus]=useState(getSupabaseStatus);useEffect(()=>{const unsubscribe=subscribeSupabaseStatus(setStatus);testSupabaseConnection().catch(()=>{});return unsubscribe},[]);const busy=status.state==="connecting"||status.state==="syncing";return <button type="button" className={`sync-status ${status.state}`} onClick={()=>testSupabaseConnection().catch(()=>{})} disabled={busy} title={status.message} aria-label={`État Supabase : ${status.message}. Cliquer pour retester.`}><i/>{status.state==="disabled"?"Local":status.state==="error"?"Erreur de synchro":busy?"Connexion…":status.state==="synced"?"Synchronisé":"Connecté"}</button>}
+function SupabaseIndicators({ stats }) {
+  const [status,setStatus]=useState(getSupabaseStatus);
+  useEffect(()=>{const unsubscribe=subscribeSupabaseStatus(setStatus);testSupabaseConnection().catch(()=>{});return unsubscribe},[]);
+  const busy=status.state==="connecting"||status.state==="syncing", discoveries=stats?.discoveries||[], synced=discoveries.filter(item=>item.remoteCompositionId).length, pending=isSupabaseConfigured?discoveries.length-synced:0;
+  const connectionLabel=status.state==="disabled"?"Mode local":status.state==="error"?"À vérifier":busy?"Test en cours":"Opérationnelle";
+  const syncLabel=!isSupabaseConfigured?"Non activée":pending?`${pending} en attente`:discoveries.length?"À jour":"Prête";
+  const checked=status.checkedAt?new Date(status.checkedAt).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}):"Jamais";
+  return <section className="supabase-panel" aria-labelledby="supabase-title"><div className="supabase-heading"><div><p>ENVIRONNEMENT DE TEST</p><h2 id="supabase-title">État Supabase</h2></div><button type="button" onClick={()=>testSupabaseConnection().catch(()=>{})} disabled={busy}>{busy?"Test…":"Retester"}</button></div><div className="supabase-metrics"><div><i className={`status-dot ${status.state}`}/><span>Connexion<b>{connectionLabel}</b></span></div><div><i className={`status-dot ${pending?"pending":status.state}`}/><span>Synchronisation<b>{syncLabel}</b></span></div><div><i className="status-dot local"/><span>Stockage local<b>{discoveries.length} découverte{discoveries.length!==1?"s":""}</b></span></div></div><p className="supabase-detail" role="status">{status.message} · Dernier test : {checked}</p></section>
+}
 
 function Home({ go, stats }) {
   const discoveries=stats?.discoveries||[],last=discoveries.at(-1),lastCard=DREAM_CARDS.find(card=>card.id===last?.cardId);
-  return <main className="explore-page minimal-home"><section className="explore-hello"><p>UN VOYAGE CULTUREL</p><h1>Où Nao t’emmène<br/>aujourd’hui&nbsp;?</h1><p className="home-promise">Choisis quelques signes. Nao te fera rencontrer un récit du monde.</p><button className="primary" onClick={()=>go(`/nao/${NAO_ID}/resonance`)}>Commencer un voyage <span>→</span></button></section>{lastCard&&<button className="recent-link" onClick={()=>go(`/nao/${NAO_ID}/discovery/${last.id}`)}><span><small>DERNIÈRE DÉCOUVERTE</small><b>{lastCard.title}</b><em>{lastCard.culture}</em></span><strong>→</strong></button>}</main>;
+  return <main className="explore-page minimal-home"><section className="explore-hello"><p>UN VOYAGE CULTUREL</p><h1>Où Nao t’emmène<br/>aujourd’hui&nbsp;?</h1><p className="home-promise">Choisis quelques signes. Nao te fera rencontrer un récit du monde.</p><button className="primary" onClick={()=>go(`/nao/${NAO_ID}/resonance`)}>Commencer un voyage <span>→</span></button></section><SupabaseIndicators stats={stats}/>{lastCard&&<button className="recent-link" onClick={()=>go(`/nao/${NAO_ID}/discovery/${last.id}`)}><span><small>DERNIÈRE DÉCOUVERTE</small><b>{lastCard.title}</b><em>{lastCard.culture}</em></span><strong>→</strong></button>}</main>;
 }
 
 function ResonanceForm({ onSubmit }) {
