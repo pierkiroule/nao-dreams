@@ -1,10 +1,42 @@
 import CultureNode from "./CultureNode";
-import DreamBubble from "./DreamBubble";
 
-type Culture={id:string;culture:string;emojis:string[];summary:string};
-type Props={cultures:Culture[];selected:Culture[];onToggle:(culture:Culture)=>void;onBack:()=>void};
-export default function Dreamcatcher({cultures,selected,onToggle,onBack}:Props){
- const points=cultures.map((_,index)=>{const angle=-Math.PI/2+index*Math.PI*2/cultures.length;return{x:50+42*Math.cos(angle),y:50+42*Math.sin(angle)}});
- const selectedPoints=selected.map(culture=>points[cultures.findIndex(item=>item.id===culture.id)]).filter(Boolean);
- return <main className="dreamcatcher-screen"><button className="quiet-back" onClick={onBack} aria-label="Retour vers le Grand O">←</button><div className="flow-copy"><p>Choisis trois échos.</p><small>Ils tisseront un rêve.</small></div><div className="dreamcatcher" role="group" aria-label="Cultures oniriques"><svg viewBox="0 0 100 100" aria-hidden="true"><polyline points={selectedPoints.map(p=>`${p.x},${p.y}`).join(" ")} className={selectedPoints.length===3?"complete":""}/>{selectedPoints.map((p,i)=><circle key={i} cx={p.x} cy={p.y} r=".7"/>)}</svg>{cultures.map((culture,index)=><CultureNode key={culture.id} culture={culture} selected={selected.some(item=>item.id===culture.id)} position={points[index]} onSelect={onToggle}/>)}<DreamBubble size="medium" intensity={selected.length/3}><span className="echo-count">{[1,2,3].map(n=><i className={selected.length>=n?"lit":""} key={n}>{n}</i>)}</span></DreamBubble></div></main>
+type Culture = {
+  id: string;
+  culture: string;
+  emojis: string[];
+};
+
+type Props = {
+  cultures: Culture[];
+  onSelect: (culture: Culture) => void;
+  onBack: () => void;
+};
+
+const positions = [
+  { x: 12, y: 18 }, { x: 36, y: 11 }, { x: 68, y: 17 }, { x: 88, y: 31 },
+  { x: 18, y: 48 }, { x: 48, y: 39 }, { x: 75, y: 52 }, { x: 35, y: 67 },
+  { x: 8, y: 78 }, { x: 60, y: 78 }, { x: 88, y: 73 }, { x: 44, y: 91 },
+];
+
+export default function Dreamcatcher({ cultures, onSelect, onBack }: Props) {
+  return (
+    <main className="dreamcatcher-screen">
+      <button className="quiet-back" onClick={onBack} aria-label="Retour vers le Grand O">←</button>
+      <div className="flow-copy">
+        <p>Quelle image t’appelle&nbsp;?</p>
+        <small>Choisis une seule bulle, sans chercher à l’interpréter.</small>
+      </div>
+      <div className="dreamcatcher floating-cultures" role="group" aria-label="Images ouvrant vers une ressource culturelle">
+        {cultures.map((culture, index) => (
+          <CultureNode
+            key={culture.id}
+            culture={culture}
+            position={positions[index % positions.length]}
+            delay={-(index * 1.7)}
+            onSelect={onSelect}
+          />
+        ))}
+      </div>
+    </main>
+  );
 }

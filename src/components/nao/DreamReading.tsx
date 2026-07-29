@@ -1,6 +1,62 @@
-import {useState} from "react";
+import { useState } from "react";
 import DreamBubble from "./DreamBubble";
 import ResonancePicker from "./ResonancePicker";
-type Culture={id:string;culture:string;emojis:string[];summary:string};
-type Props={cultures:Culture[];title:string;text:string;onRelease:(resonance:string)=>void};
-export default function DreamReading({cultures,title,text,onRelease}:Props){const[resonance,setResonance]=useState(""),[sources,setSources]=useState(false);return <main className="reading-screen"><p className="ocean-whisper">Le rêve prend forme.</p><DreamBubble size="large" intensity={.72}><article><small>UN RÊVE DU GRAND O•°</small><h1>{title}</h1><p>{text}</p><footer>Inspiré par trois échos culturels</footer></article></DreamBubble><p className="culture-echoes">{cultures.map(culture=><span key={culture.id}><i aria-hidden="true">{culture.emojis[0]}</i>{culture.culture.split(/[,(]/)[0]}</span>)}</p><button className="inspiration-toggle" onClick={()=>setSources(!sources)} aria-expanded={sources}>{sources?"Refermer":"Voir les inspirations"}</button>{sources&&<aside className="inspirations">{cultures.map(culture=><p key={culture.id}><b>{culture.culture}</b>{culture.summary}</p>)}</aside>}<ResonancePicker value={resonance} onChange={setResonance} onRelease={()=>onRelease(resonance)}/></main>}
+
+type Culture = {
+  id: string;
+  title: string;
+  culture: string;
+  country: string;
+  region: string;
+  summary: string;
+  fullStory: string;
+  culturalContext: string;
+  dreamFunction: string;
+  symbols: string[];
+  emojis: string[];
+  sourceLabels: string[];
+};
+
+type Props = {
+  culture: Culture;
+  suggestions: string[];
+  onRelease: (suggestion: string) => void;
+};
+
+export default function DreamReading({ culture, suggestions, onRelease }: Props) {
+  const [selectedSuggestion, setSelectedSuggestion] = useState("");
+
+  return (
+    <main className="reading-screen resource-reading">
+      <p className="ocean-whisper">Une ressource culturelle émerge.</p>
+      <DreamBubble size="large" intensity={.72}>
+        <article>
+          <small>{culture.culture} · {culture.region}</small>
+          <h1>{culture.title}</h1>
+          <p>{culture.summary}</p>
+          <footer>{culture.country}</footer>
+        </article>
+      </DreamBubble>
+
+      <section className="cultural-resource" aria-labelledby="resource-details-title">
+        <p className="step">LA RESSOURCE</p>
+        <h2 id="resource-details-title">Découvrir avant de laisser résonner</h2>
+        <h3>Le récit</h3>
+        <p>{culture.fullStory}</p>
+        <h3>Son contexte culturel</h3>
+        <p>{culture.culturalContext}</p>
+        <h3>La place du rêve</h3>
+        <p>{culture.dreamFunction}</p>
+        <p className="resource-symbols">{culture.symbols.join(" · ")}</p>
+        <footer>Source&nbsp;: {culture.sourceLabels.join(" · ")}</footer>
+      </section>
+
+      <ResonancePicker
+        choices={suggestions}
+        value={selectedSuggestion}
+        onChange={setSelectedSuggestion}
+        onRelease={() => onRelease(selectedSuggestion)}
+      />
+    </main>
+  );
+}
