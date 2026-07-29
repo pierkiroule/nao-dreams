@@ -27,7 +27,7 @@ Le build de production est généré avec `npm run build` et les tests avec `npm
 
 Supabase est activé lorsque `VITE_SUPABASE_URL` et `VITE_SUPABASE_PUBLISHABLE_KEY` sont présents. L'application conserve la session anonyme, vérifie séparément l'activation dans `user_access`, puis synchronise les rêves dans `dream_compositions` et exactement trois associations `composition_cultures`. Le `client_id` rend chaque envoi idempotent. Les rêves non synchronisés restent dans le stockage local V2. Aucun appel IA, aucune géolocalisation et aucun paiement réel ne sont utilisés.
 
-Le panneau complet de diagnostic est visible en développement. Pour l'autoriser explicitement dans un autre environnement de test, définir `VITE_ENABLE_TEST_TOOLS=true`. La migration SQL de `supabase/migrations/` doit être appliquée avant d'activer la synchronisation V2.
+Les indicateurs de connexion, d’accès et de synchronisation restent visibles sur la page d’accueil dans tous les environnements. Le bouton destructif de réinitialisation reste réservé au développement ; pour l’autoriser explicitement dans un autre environnement de test, définir `VITE_ENABLE_TEST_TOOLS=true`. La migration SQL de `supabase/migrations/` doit être appliquée avant d'activer la synchronisation V2.
 
 Le panneau de test vérifie séparément Supabase, la session et l'activation dans `user_access`. Le bouton **Retester** relance ces contrôles puis une unique tentative de synchronisation des seuls rêves V2 réellement en attente.
 
