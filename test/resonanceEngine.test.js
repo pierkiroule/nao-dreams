@@ -15,8 +15,3 @@ test("une région nouvelle reçoit le bonus de diversité",()=>{const card=DREAM
 test("le résultat reste stable pour une contribution donnée",()=>{assert.equal(selectDreamCultureCard(input,journey,DREAM_CARDS).id,selectDreamCultureCard(input,journey,DREAM_CARDS).id)});
 test("les phrases restent locales et prudentes",()=>{assert.equal(RESONANCE_TEMPLATES.length,36);const text=buildResonanceText(input,DREAM_CARDS[0]);assert.doesNotMatch(text,/signifie|prouve|révèle que tu es/i)});
 test("la démarche anthropologique expose ses repères et ses limites",()=>{assert.equal(RESEARCH_REFERENCES.length,6);assert.ok(RESEARCH_PRINCIPLES.length>=4);assert.ok(RESEARCH_REFERENCES.every(reference=>reference.author&&reference.work&&reference.focus))});
-
-import { selectWorldDreamResource } from "../src/lib/resonanceEngine.js";
-test("trois emojis libèrent une ressource culturelle correspondante",()=>{const card=selectWorldDreamResource(["🌊","🛶","🪶"],DREAM_CARDS);assert.equal(card.id,"barque-reves");assert.ok(card.fullStory&&card.culturalContext&&card.dreamFunction);assert.ok(card.sourceNotes.length>=2)});
-test("la séquence de signes produit une sélection stable",()=>{const sequence=["🦋","💭","🌸"];assert.equal(selectWorldDreamResource(sequence,DREAM_CARDS).id,selectWorldDreamResource(sequence,DREAM_CARDS).id)});
-test("la sélection culturelle exige exactement trois emojis",()=>{assert.throws(()=>selectWorldDreamResource(["🌊","🌙"],DREAM_CARDS),/Trois emojis/)});

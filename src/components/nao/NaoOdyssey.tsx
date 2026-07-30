@@ -1,6 +1,6 @@
 import {useEffect,useMemo,useRef,useState} from "react";
-import {DREAM_CARDS,EMOJIS} from "../../data/dreamCultures";
-import {selectWorldDreamResource} from "../../lib/resonanceEngine";
+import {EMOJIS} from "../../data/dreamCultures";
+import {generateProjectiveDream} from "../../lib/projectiveDreamEngine";
 import {saveLocalDream} from "../../services/dreamSyncService";
 import TestEnvironmentPanel from "../TestEnvironmentPanel";
 import Dreamcatcher from "./Dreamcatcher";
@@ -11,14 +11,13 @@ import NaoBoat from "./NaoBoat";
 import NaoLogo from "./NaoLogo";
 import "../../styles/nao.css";
 type Phase="entry"|"choosing"|"weaving"|"reading"|"released";type Props={onLeave?:()=>void};
-export default function NaoOdyssey({onLeave}:Props){const[phase,setPhase]=useState<Phase>("entry"),[selected,setSelected]=useState<string[]>([]),[departing,setDeparting]=useState(false),saved=useRef(false),resource=useMemo(()=>selected.length===3?selectWorldDreamResource(selected,DREAM_CARDS):null,[selected]);const toggle=(emoji:string)=>setSelected(current=>current.includes(emoji)?current.filter(item=>item!==emoji):current.length<3?[...current,emoji]:current);
+export default function NaoOdyssey({onLeave}:Props){const[phase,setPhase]=useState<Phase>("entry"),[selected,setSelected]=useState<string[]>([]),[departing,setDeparting]=useState(false),saving=useRef(false),dream=useMemo(()=>selected.length===3?generateProjectiveDream(selected):null,[selected]);const toggle=(emoji:string)=>setSelected(current=>current.includes(emoji)?current.filter(item=>item!==emoji):current.length<3?[...current,emoji]:current);
  useEffect(()=>{if(selected.length!==3||phase!=="choosing")return;const id=setTimeout(()=>setPhase("weaving"),500);return()=>clearTimeout(id)},[selected,phase]);
  useEffect(()=>{if(phase!=="weaving")return;const id=setTimeout(()=>setPhase("reading"),1800);return()=>clearTimeout(id)},[phase]);
- useEffect(()=>{if(phase!=="reading"||!resource||saved.current)return;saved.current=true;saveLocalDream({title:resource.title,dreamText:resource.summary,cultureIds:[resource.id],emojiSequence:selected}).catch(()=>{})},[phase,resource,selected]);
- const release=()=>{setDeparting(true);setTimeout(()=>setPhase("released"),900)};let content;
- if(phase==="entry")content=<main className="grand-o-entry"><NaoLogo/><div className="odyssey-intro"><div className="boat-horizon"><NaoBoat size="hero"/></div><h1>L’Odyssée de Nao Dream</h1><p className="odyssey-subtitle">La petite noix qui voyage de main en main pour réveiller les rêves du monde <span>•°</span></p><div className="odyssey-story"><p>Choisis trois emojis. Leur séquence libérera une ressource culturelle onirique venue du monde.</p><p className="odyssey-closing">Un récit à découvrir, son contexte à comprendre, une source pour poursuivre.</p></div><button className="enter-ocean" onClick={()=>setPhase("choosing")}><span>Entrer dans le Grand O•°</span><i/></button></div><details className="system-tide"><summary>État du courant</summary><TestEnvironmentPanel/></details>{onLeave&&<button className="leave-ocean" onClick={onLeave}>Explorer autrement</button>}</main>;
+ const release=async(dreamText:string,answers:string[])=>{if(!dream||saving.current)return;saving.current=true;await saveLocalDream({title:dream.title,dreamText,cultureIds:[],emojiSequence:selected,projectiveAnswers:answers,seed:dream.seed}).catch(()=>{});setDeparting(true);setTimeout(()=>setPhase("released"),700)};let content;
+ if(phase==="entry")content=<main className="grand-o-entry"><NaoLogo/><div className="odyssey-intro"><div className="boat-horizon"><NaoBoat size="hero"/></div><h1>L’Odyssée de Nao Dream</h1><p className="odyssey-subtitle">La petite noix qui voyage de main en main pour réveiller les rêves du monde <span>•°</span></p><div className="odyssey-story"><p>Choisis trois emojis. Leur séquence fera apparaître un rêve à trous.</p><p className="odyssey-closing">Quelques mots manquent. Ton imaginaire sait peut-être où les trouver.</p></div><button className="enter-ocean" onClick={()=>setPhase("choosing")}><span>Entrer dans le Grand O•°</span><i/></button></div><details className="system-tide"><summary>État du courant</summary><TestEnvironmentPanel/></details>{onLeave&&<button className="leave-ocean" onClick={onLeave}>Explorer autrement</button>}</main>;
  else if(phase==="choosing")content=<Dreamcatcher emojis={EMOJIS} selected={selected} onToggle={toggle} onBack={()=>{setSelected([]);setPhase("entry")}}/>;
  else if(phase==="weaving")content=<DreamWeaving/>;
- else if(phase==="reading"&&resource)content=<div className={departing?"dream-departing":""}><DreamReading resource={resource} sequence={selected} onRelease={release}/></div>;
- else content=<main className="released-screen"><div className="released-bubble">○</div><NaoBoat size="medium" motion="depart"/><p>Ce rêve du monde poursuit son voyage.</p><button onClick={()=>{saved.current=false;setSelected([]);setPhase("entry")}}>Passer la noix</button></main>;
+ else if(phase==="reading"&&dream)content=<div className={departing?"dream-departing":""}><DreamReading dream={dream} onRelease={release}/></div>;
+ else content=<main className="released-screen"><div className="released-bubble">○</div><NaoBoat size="medium" motion="depart"/><p>Ton rêve peut maintenant poursuivre son voyage.</p><button onClick={()=>{saving.current=false;setSelected([]);setPhase("entry")}}>Passer la noix</button></main>;
  return <div className={`nao-odyssey phase-${phase}`}><GrandOBackground/>{content}</div>}
