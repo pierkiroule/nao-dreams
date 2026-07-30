@@ -7,7 +7,7 @@ function fakeStorage(entries={}) {
   return { getItem:key=>values.get(key)??null,setItem:(key,value)=>values.set(key,String(value)),removeItem:key=>values.delete(key),values };
 }
 
-test("la migration supprime seulement les anciennes clés NAO et passe en version 3",async()=>{
+test("la migration supprime seulement les anciennes clés NAO et passe en version 2",async()=>{
   const storage=fakeStorage({"nao-discoveries":"legacy","another-application":"keep"});
   globalThis.localStorage=storage;
   await migrateLocalStorage();

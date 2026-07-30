@@ -1,10 +1,10 @@
-export const LOCAL_DATA_VERSION = 3;
+export const LOCAL_DATA_VERSION = 2;
 export const STORAGE_VERSION_KEY = "nao-dream-storage-version";
-export const DREAM_DRAFTS_KEY = "nao-dream-drafts-v3";
+export const DREAM_DRAFTS_KEY = "nao-dream-drafts-v2";
 
 export const LEGACY_STORAGE_KEYS = [
   "nao-discoveries", "nao-dream-discoveries", "nao-pending-sync", "nao-sync-queue",
-  "nao-dream-drafts-v2", "nao-active-dream-bubble", "nao-journeys", "nao-bubbles", "dream-bubbles", "journey-store", "discovery-store",
+  "nao-journeys", "nao-bubbles", "dream-bubbles", "journey-store", "discovery-store",
 ];
 
 export const LEGACY_DATABASE_NAMES = ["nao-dream", "nao-discoveries", "nao-dream-cache", "nao-offline"];

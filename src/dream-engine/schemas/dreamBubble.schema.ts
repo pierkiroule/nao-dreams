@@ -1,3 +1,0 @@
-import type {DreamBubble} from "../types/dream.ts";
-import {dreamFragmentSchema} from "./dreamFragment.schema.ts";
-export const dreamBubbleSchema={safeParse(value:unknown){const v=value as DreamBubble;const ok=!!v&&typeof v.id==="string"&&typeof v.seed==="string"&&Array.isArray(v.emojiIds)&&v.emojiIds.length===3&&Array.isArray(v.fragments)&&v.fragments.length>=7&&v.fragments.length<=11&&v.fragments.every(fragment=>dreamFragmentSchema.safeParse(fragment).success);return ok?{success:true as const,data:v}:{success:false as const,error:new Error("Bulle onirique invalide")}},parse(value:unknown){const result=this.safeParse(value);if(!result.success)throw result.error;return result.data}};
