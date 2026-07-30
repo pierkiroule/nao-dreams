@@ -1,0 +1,8 @@
+[
+  { "id": "breathe", "emoji": "🌿", "title": "Respirer", "text": "Je peux laisser un peu d’air entrer avant de répondre." },
+  { "id": "small-step", "emoji": "🐾", "title": "Un petit pas", "text": "Je choisis le plus petit geste possible, et cela suffit pour aujourd’hui." },
+  { "id": "ask", "emoji": "🤲", "title": "Demander", "text": "Je peux partager le poids et demander une présence." },
+  { "id": "rest", "emoji": "🪺", "title": "Faire une pause", "text": "Le repos n’est pas un détour : il prépare la suite." },
+  { "id": "name", "emoji": "🪨", "title": "Nommer", "text": "Je nomme ce qui pèse sans avoir à le résoudre tout de suite." },
+  { "id": "perspective", "emoji": "🌱", "title": "Regarder autrement", "text": "Une autre manière de regarder peut ouvrir un passage minuscule." }
+]
