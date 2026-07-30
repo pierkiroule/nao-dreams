@@ -2,3 +2,21 @@
 @keyframes ocean-breathe{to{transform:translate(8%,5%) scale(1.12)}}@keyframes bubble-rise{0%{transform:translateY(0);opacity:0}15%{opacity:.35}100%{transform:translateY(-115vh);opacity:0}}@keyframes logo-breathe{50%{opacity:.65;box-shadow:0 0 14px var(--bubble-glow)}}@keyframes boat-drift{50%{transform:translateY(-8px) rotate(2deg)}}@keyframes boat-depart{50%{transform:translate(20px,-6px) rotate(2deg)}}@keyframes bubble-shape{50%{border-radius:54% 46% 52% 48%;transform:translateY(-3px)}}@keyframes thread-pulse{50%{opacity:.45;filter:blur(.4px)}}@keyframes bubble-birth{from{opacity:0;transform:translate(-50%,-50%) scale(.2)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}@keyframes reading-fade{to{opacity:0;transform:translateY(-50px) scale(.94)}}@keyframes release-rise{to{opacity:0;transform:translateY(-40vh) scale(.65)}}
 @media(max-width:520px){.dreamcatcher-screen{padding-inline:.4rem}.dreamcatcher{width:min(98vw,500px);margin-top:2.5rem}.culture-node{width:58px}.culture-node small{width:62px;font-size:.52rem}.culture-node span{font-size:1.35rem}.dreamcatcher>.dream-bubble{width:21%}.system-tide[open]{bottom:.5rem}.system-tide .test-panel dl{grid-template-columns:1fr 1fr}.reading-screen{padding-inline:1rem}.reading-screen>.dream-bubble{width:94vw;padding:2rem 1.5rem}.resonance-picker{margin-top:4rem}}
 @media(prefers-reduced-motion:reduce){.nao-odyssey *,.nao-odyssey *:before,.nao-odyssey *:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+/* Introductory manifesto */
+.grand-o-entry{justify-content:flex-start;overflow-y:auto;padding-block:5.5rem 7rem}
+.odyssey-intro{display:flex;width:min(100%,720px);align-items:center;flex-direction:column}
+.grand-o-entry h1{margin:2.4rem 0 .8rem;line-height:1.05}
+.odyssey-subtitle{max-width:590px;margin:0;color:var(--gold-soft);font-family:Fraunces,serif;font-size:clamp(1.05rem,3.5vw,1.35rem);line-height:1.55}
+.odyssey-subtitle span{white-space:nowrap}
+.odyssey-story{max-width:620px;margin:2.4rem auto 1.8rem;padding-block:2rem;border-block:1px solid var(--bubble-border);color:var(--text-soft);font-size:clamp(.88rem,2.4vw,1rem);line-height:1.75}
+.odyssey-story p{margin:0 0 1.15rem}
+.odyssey-story p:last-child{margin-bottom:0}
+.odyssey-story .odyssey-closing{color:var(--text-main);font-family:Fraunces,serif;font-size:1.08em}
+.inspirations h2{margin:0 0 1.5rem;color:var(--text-main);font-family:Fraunces,serif;font-size:1.35rem;font-weight:400;text-align:center}
+
+@media(max-width:520px){
+ .grand-o-entry{padding-inline:1.1rem}
+ .boat-horizon{height:180px}
+ .odyssey-story{margin-top:2rem;padding-block:1.5rem}
+}
