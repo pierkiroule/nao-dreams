@@ -72,14 +72,14 @@ export async function upsertDreamComposition(dream) {
   const { user, access } = await getNaoAccess();
   if (!user) throw new Error("Aucun utilisateur Supabase authentifié.");
   if (access?.access_status !== "active") throw new Error("L’accès NAO n’est pas activé.");
-  const cultures=await rest("dream_cultures",{query:`select=id,slug&slug=in.(${dream.cultureIds.map(encodeURIComponent).join(",")})&active=eq.true&status=eq.published`});
-  const cultureIds=dream.cultureIds.map(slug=>cultures?.find(culture=>culture.slug===slug)?.id);
+  const cultures=dream.fragmentIds?[]:await rest("dream_cultures",{query:`select=id,slug&slug=in.(${dream.cultureIds.map(encodeURIComponent).join(",")})&active=eq.true&status=eq.published`});
+  const cultureIds=(dream.cultureIds||[]).map(slug=>cultures?.find(culture=>culture.slug===slug)?.id);
   if(cultureIds.some(id=>!id))throw new Error("Une ou plusieurs cultures ne sont pas disponibles.");
   const existing = await rest("dream_compositions", { query: `select=id&user_id=eq.${encodeURIComponent(user.id)}&client_id=eq.${encodeURIComponent(dream.id)}&limit=1` });
   let compositionId = existing?.[0]?.id;
   if (!compositionId) {
     try {
-      const rows = await rest("dream_compositions", { method: "POST", returning: true, body: { user_id:user.id,client_id:dream.id,title:dream.title.slice(0,150),dream_text:dream.dreamText.slice(0,3000),composition_mode:"rules",visibility:"private",locale:"fr" } });
+      const rows = await rest("dream_compositions", { method: "POST", returning: true, body: { user_id:user.id,client_id:dream.id,title:dream.title.slice(0,150),dream_text:dream.dreamText.slice(0,3000),composition_mode:"rules",visibility:"private",locale:"fr",...(dream.fragmentIds?{session_id:dream.sessionId,emoji_ids:dream.emojiIds,seed:dream.seed,fragment_ids:dream.fragmentIds,pattern_id:dream.patternId,library_version:dream.libraryVersion||2,revealed_count:dream.revealedCount||0,completed_at:dream.completedAt||null,resonance_type:dream.resonanceType||null,resonance_word:dream.resonanceWord||null,released_at:dream.releasedAt||null}:{}) } });
       compositionId = rows?.[0]?.id;
     } catch (error) {
       const concurrent = await rest("dream_compositions", { query: `select=id&user_id=eq.${encodeURIComponent(user.id)}&client_id=eq.${encodeURIComponent(dream.id)}&limit=1` });
@@ -88,6 +88,8 @@ export async function upsertDreamComposition(dream) {
     }
   }
   if (!compositionId) throw new Error("La composition n’a pas pu être enregistrée.");
+  if (dream.fragmentIds) await rest("dream_compositions", { method:"PATCH",query:`id=eq.${encodeURIComponent(compositionId)}`,body:{revealed_count:dream.revealedCount||0,completed_at:dream.completedAt||null,resonance_type:dream.resonanceType||null,resonance_word:dream.resonanceWord||null,released_at:dream.releasedAt||null} });
+  if (!cultureIds.length) return compositionId;
   await rest("composition_cultures", { method:"DELETE", query:`composition_id=eq.${encodeURIComponent(compositionId)}` });
   await rest("composition_cultures", { method:"POST", body:cultureIds.map((cultureId,index)=>({composition_id:compositionId,culture_id:cultureId,selection_order:index+1})) });
   return compositionId;

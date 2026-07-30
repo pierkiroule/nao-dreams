@@ -30,7 +30,7 @@ export async function syncPendingDreams() {
     for (const dream of pending) {
       result.attempted++;
       try {
-        if (!Array.isArray(dream.cultureIds)||dream.cultureIds.length!==3) throw new Error("Trois cultures sont requises.");
+        if (!dream.fragmentIds&&(!Array.isArray(dream.cultureIds)||dream.cultureIds.length!==3)) throw new Error("Trois cultures sont requises.");
         await upsertDreamComposition(dream);
         dreamDraftStore.markSynced(dream.id);result.succeeded++;
       } catch(error) { const message=error?.message||"Synchronisation impossible.";dreamDraftStore.markSyncError(dream.id,message);result.failed++;result.errors.push({localId:dream.id,message}); }

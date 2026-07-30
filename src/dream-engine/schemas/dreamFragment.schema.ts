@@ -1,0 +1,4 @@
+import type {DreamFragment} from "../types/dream.ts";
+const kinds=new Set(["threshold","place","presence","movement","sensation","matter","voice","anomaly","emotion","memory","transformation","trace","silence"]);
+const shapes=new Set(["sentence","nominal","dialogue","enumeration","ellipsis"]);
+export const dreamFragmentSchema={safeParse(value:unknown){const v=value as DreamFragment;const ok=!!v&&typeof v.id==="string"&&typeof v.text==="string"&&kinds.has(v.kind)&&Array.isArray(v.themes)&&Array.isArray(v.atmosphere)&&Number.isInteger(v.intensity)&&v.intensity>=1&&v.intensity<=5&&shapes.has(v.grammaticalShape);return ok?{success:true as const,data:v}:{success:false as const,error:new Error("Fragment onirique invalide")}},parse(value:unknown){const result=this.safeParse(value);if(!result.success)throw result.error;return result.data}};
