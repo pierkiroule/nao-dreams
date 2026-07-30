@@ -72,8 +72,9 @@ export async function upsertDreamComposition(dream) {
   const { user, access } = await getNaoAccess();
   if (!user) throw new Error("Aucun utilisateur Supabase authentifié.");
   if (access?.access_status !== "active") throw new Error("L’accès NAO n’est pas activé.");
-  const cultures=await rest("dream_cultures",{query:`select=id,slug&slug=in.(${dream.cultureIds.map(encodeURIComponent).join(",")})&active=eq.true&status=eq.published`});
-  const cultureIds=dream.cultureIds.map(slug=>cultures?.find(culture=>culture.slug===slug)?.id);
+  const cultureSlugs=Array.isArray(dream.cultureIds)?dream.cultureIds:[];
+  const cultures=cultureSlugs.length?await rest("dream_cultures",{query:`select=id,slug&slug=in.(${cultureSlugs.map(encodeURIComponent).join(",")})&active=eq.true&status=eq.published`}):[];
+  const cultureIds=cultureSlugs.map(slug=>cultures?.find(culture=>culture.slug===slug)?.id);
   if(cultureIds.some(id=>!id))throw new Error("Une ou plusieurs cultures ne sont pas disponibles.");
   const existing = await rest("dream_compositions", { query: `select=id&user_id=eq.${encodeURIComponent(user.id)}&client_id=eq.${encodeURIComponent(dream.id)}&limit=1` });
   let compositionId = existing?.[0]?.id;
@@ -88,6 +89,7 @@ export async function upsertDreamComposition(dream) {
     }
   }
   if (!compositionId) throw new Error("La composition n’a pas pu être enregistrée.");
+  if (!cultureIds.length) return compositionId;
   await rest("composition_cultures", { method:"DELETE", query:`composition_id=eq.${encodeURIComponent(compositionId)}` });
   await rest("composition_cultures", { method:"POST", body:cultureIds.map((cultureId,index)=>({composition_id:compositionId,culture_id:cultureId,selection_order:index+1})) });
   return compositionId;
